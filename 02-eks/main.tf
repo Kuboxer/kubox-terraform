@@ -35,7 +35,7 @@ resource "aws_eks_cluster" "kubox_cluster" {
 
   vpc_config {
     subnet_ids              = concat(data.aws_subnets.private_subnets.ids, data.aws_subnets.public_subnets.ids)
-    security_group_ids      = [aws_security_group.eks_cluster_sg.id]
+    # security_group_ids 제거 - AWS 자동 생성 보안그룹 사용
     endpoint_private_access = true
     endpoint_public_access  = true
   }
@@ -127,8 +127,9 @@ resource "aws_eks_node_group" "kubox_node_group" {
     aws_iam_role_policy_attachment.eks_container_registry_policy,
   ]
 
+  # 간단한 노드 이름 설정
   tags = {
-    Name    = var.node_group_name
+    Name    = "${var.cluster_name}-worker"
     Project = var.project_name
   }
 }

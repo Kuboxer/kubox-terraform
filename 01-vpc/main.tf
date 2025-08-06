@@ -23,7 +23,7 @@ resource "aws_subnet" "public_subnet_a" {
   
   tags = {
     Name = "public-subnet-a"
-    Description = "NAT Gateway 용"
+    Description = "NAT Gateway subnet"
   }
 }
 
@@ -47,7 +47,7 @@ resource "aws_subnet" "private_subnet_a" {
   
   tags = {
     Name = "private-subnet-a"
-    Description = "EKS"
+    Description = "EKS worker nodes subnet"
   }
 }
 
@@ -59,7 +59,7 @@ resource "aws_subnet" "private_subnet_c" {
   
   tags = {
     Name = "private-subnet-c"
-    Description = "EKS"
+    Description = "EKS worker nodes subnet"
   }
 }
 
@@ -71,7 +71,7 @@ resource "aws_subnet" "rds_subnet_a" {
   
   tags = {
     Name = "rds-subnet-a"
-    Description = "RDS Primary"
+    Description = "RDS primary database subnet"
   }
 }
 
@@ -83,7 +83,7 @@ resource "aws_subnet" "rds_subnet_c" {
   
   tags = {
     Name = "rds-subnet-c"
-    Description = "RDS Secondary"
+    Description = "RDS secondary database subnet"
   }
 }
 
@@ -95,7 +95,7 @@ resource "aws_subnet" "elasticache_subnet_a" {
   
   tags = {
     Name = "elasticache-subnet-a"
-    Description = "ElastiCache"
+    Description = "ElastiCache Redis subnet"
   }
 }
 
@@ -107,7 +107,7 @@ resource "aws_subnet" "elasticache_subnet_c" {
   
   tags = {
     Name = "elasticache-subnet-c"
-    Description = "ElastiCache"
+    Description = "ElastiCache Redis subnet"
   }
 }
 
@@ -187,7 +187,7 @@ resource "aws_route_table" "kubox_rds_rt" {
   
   tags = {
     Name = "kubox-rds-rt"
-    Description = "내부 통신용"
+    Description = "Internal communication only"
   }
 }
 
@@ -197,7 +197,7 @@ resource "aws_route_table" "kubox_elasticache_rt" {
   
   tags = {
     Name = "kubox-elasticache-rt"
-    Description = "내부 통신용"
+    Description = "Internal communication only"
   }
 }
 

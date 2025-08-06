@@ -1,17 +1,17 @@
 # VPC 정보
 output "vpc_id" {
-  description = "생성된 VPC의 ID"
+  description = "ID of the created VPC"
   value       = aws_vpc.kubox_vpc.id
 }
 
 output "vpc_cidr_block" {
-  description = "VPC CIDR 블록"
+  description = "VPC CIDR block"
   value       = aws_vpc.kubox_vpc.cidr_block
 }
 
 # 서브넷 정보
 output "public_subnet_ids" {
-  description = "Public 서브넷들의 ID"
+  description = "IDs of public subnets"
   value = {
     public_subnet_a = aws_subnet.public_subnet_a.id
     public_subnet_c = aws_subnet.public_subnet_c.id
@@ -19,7 +19,7 @@ output "public_subnet_ids" {
 }
 
 output "private_subnet_ids" {
-  description = "Private 서브넷들의 ID (EKS용)"
+  description = "IDs of private subnets for EKS"
   value = {
     private_subnet_a = aws_subnet.private_subnet_a.id
     private_subnet_c = aws_subnet.private_subnet_c.id
@@ -27,7 +27,7 @@ output "private_subnet_ids" {
 }
 
 output "rds_subnet_ids" {
-  description = "RDS 서브넷들의 ID"
+  description = "IDs of RDS subnets"
   value = {
     rds_subnet_a = aws_subnet.rds_subnet_a.id
     rds_subnet_c = aws_subnet.rds_subnet_c.id
@@ -35,7 +35,7 @@ output "rds_subnet_ids" {
 }
 
 output "elasticache_subnet_ids" {
-  description = "ElastiCache 서브넷들의 ID"
+  description = "IDs of ElastiCache subnets"
   value = {
     elasticache_subnet_a = aws_subnet.elasticache_subnet_a.id
     elasticache_subnet_c = aws_subnet.elasticache_subnet_c.id
@@ -44,23 +44,23 @@ output "elasticache_subnet_ids" {
 
 # 네트워킹 구성 요소
 output "internet_gateway_id" {
-  description = "Internet Gateway의 ID"
+  description = "ID of the Internet Gateway"
   value       = aws_internet_gateway.kubox_igw.id
 }
 
 output "nat_gateway_id" {
-  description = "NAT Gateway의 ID"
+  description = "ID of the NAT Gateway"
   value       = aws_nat_gateway.kubox_nat.id
 }
 
 output "nat_eip_public_ip" {
-  description = "NAT Gateway의 Public IP"
+  description = "Public IP of NAT Gateway"
   value       = aws_eip.nat_eip.public_ip
 }
 
 # 라우팅 테이블 정보
 output "route_table_ids" {
-  description = "모든 라우팅 테이블 ID"
+  description = "IDs of all route tables"
   value = {
     public_rt      = aws_route_table.kubox_public_rt.id
     private_rt     = aws_route_table.kubox_private_rt.id
@@ -71,7 +71,7 @@ output "route_table_ids" {
 
 # 서브넷 그룹별 목록 (RDS, ElastiCache에서 사용)
 output "rds_subnet_group" {
-  description = "RDS 서브넷 그룹용 서브넷 ID 리스트"
+  description = "List of subnet IDs for RDS subnet group"
   value = [
     aws_subnet.rds_subnet_a.id,
     aws_subnet.rds_subnet_c.id
@@ -79,7 +79,7 @@ output "rds_subnet_group" {
 }
 
 output "elasticache_subnet_group" {
-  description = "ElastiCache 서브넷 그룹용 서브넷 ID 리스트"
+  description = "List of subnet IDs for ElastiCache subnet group"
   value = [
     aws_subnet.elasticache_subnet_a.id,
     aws_subnet.elasticache_subnet_c.id
@@ -87,7 +87,7 @@ output "elasticache_subnet_group" {
 }
 
 output "eks_subnet_group" {
-  description = "EKS용 서브넷 ID 리스트"
+  description = "List of subnet IDs for EKS"
   value = [
     aws_subnet.private_subnet_a.id,
     aws_subnet.private_subnet_c.id
@@ -96,7 +96,7 @@ output "eks_subnet_group" {
 
 # 배포 정보 요약
 output "deployment_summary" {
-  description = "배포 정보 요약"
+  description = "Deployment information summary"
   value = {
     vpc_name         = "kubox-vpc"
     vpc_cidr         = "10.0.0.0/16"
@@ -110,4 +110,15 @@ output "deployment_summary" {
     nat_gateway_subnet = "public-subnet-a"
     created_at         = timestamp()
   }
+}
+
+# Bastion 정보
+output "bastion_public_ip" {
+  description = "Public IP of bastion host"
+  value       = aws_instance.bastion.public_ip
+}
+
+output "bastion_ssh_command" {
+  description = "SSH command to connect to bastion host"
+  value       = "ssh -i your-key.pem ec2-user@${aws_instance.bastion.public_ip}"
 }

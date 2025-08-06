@@ -15,7 +15,7 @@ data "aws_subnets" "private_subnets" {
   
   filter {
     name   = "tag:Description"
-    values = ["EKS"]
+    values = ["EKS worker nodes subnet"]
   }
 }
 
@@ -27,7 +27,7 @@ data "aws_subnets" "public_subnets" {
   }
   
   filter {
-    name   = "tag:Description"
-    values = ["NAT Gateway 용", ""]
+    name   = "tag:Name"
+    values = ["public-subnet-a", "public-subnet-c"]
   }
 }

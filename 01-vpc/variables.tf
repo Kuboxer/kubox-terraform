@@ -1,42 +1,42 @@
 # AWS 리전 설정
 variable "region" {
-  description = "AWS 리전 (조 계정 확정되면 수정될 수 있음)"
+  description = "AWS region (can be modified when team account is confirmed)"
   type        = string
   default     = "us-east-2"
 }
 
 # 프로젝트 이름
 variable "project_name" {
-  description = "프로젝트 이름"
+  description = "Project name"
   type        = string
   default     = "kubox"
 }
 
 # VPC CIDR 블록
 variable "vpc_cidr" {
-  description = "VPC CIDR 블록"
+  description = "VPC CIDR block"
   type        = string
   default     = "10.0.0.0/16"
 }
 
 # 가용영역 (비용 최적화를 위해 2개 사용)
 variable "azs" {
-  description = "사용할 가용영역 목록 (3개는 안정성이 높지만 비용 증가로 2개 사용)"
+  description = "List of availability zones to use (using 2 AZs for cost optimization instead of 3)"
   type        = list(string)
   default     = ["us-east-2a", "us-east-2c"]
 }
 
 # 서브넷 CIDR 설정
 variable "subnet_cidrs" {
-  description = "서브넷별 CIDR 블록 설정"
+  description = "CIDR block configuration for each subnet"
   type = object({
     public = object({
-      a = string  # public-subnet-a (NAT Gateway용)
+      a = string  # public-subnet-a (for NAT Gateway)
       c = string  # public-subnet-c
     })
     private = object({
-      a = string  # private-subnet-a (EKS Cluster용)
-      c = string  # private-subnet-c (EKS Cluster용)
+      a = string  # private-subnet-a (for EKS Cluster)
+      c = string  # private-subnet-c (for EKS Cluster)
     })
     rds = object({
       a = string  # rds-subnet-a (RDS Primary)
@@ -53,8 +53,8 @@ variable "subnet_cidrs" {
       c = "10.0.2.0/24"
     }
     private = {
-      a = "10.0.11.0/24"  # user, login, product
-      c = "10.0.12.0/24"  # order, payment
+      a = "10.0.11.0/24"  # EKS worker nodes
+      c = "10.0.12.0/24"  # EKS worker nodes
     }
     rds = {
       a = "10.0.21.0/24"  # RDS Primary
@@ -69,14 +69,14 @@ variable "subnet_cidrs" {
 
 # 환경 설정
 variable "environment" {
-  description = "배포 환경 (dev, staging, prod)"
+  description = "Deployment environment (dev, staging, prod)"
   type        = string
   default     = "dev"
 }
 
 # 태그 설정
 variable "common_tags" {
-  description = "모든 리소스에 적용될 공통 태그"
+  description = "Common tags to be applied to all resources"
   type        = map(string)
   default = {
     Project     = "kubox"
