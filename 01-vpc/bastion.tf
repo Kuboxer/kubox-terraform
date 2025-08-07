@@ -33,6 +33,15 @@ resource "aws_security_group" "bastion_sg" {
 resource "aws_instance" "bastion" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro"
+  key_name      = "kubox"  # SSH 키페어 추가
+  
+  # 스팟 인스턴스 설정
+  instance_market_options {
+    market_type = "spot"
+    spot_options {
+      max_price = "0.0104"  # t3.micro 온디맨드 가격
+    }
+  }
   
   # Public Subnet C에 배치
   subnet_id                   = aws_subnet.public_subnet_c.id

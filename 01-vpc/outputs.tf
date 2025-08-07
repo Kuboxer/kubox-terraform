@@ -120,5 +120,5 @@ output "bastion_public_ip" {
 
 output "bastion_ssh_command" {
   description = "SSH command to connect to bastion host"
-  value       = "ssh -i your-key.pem ec2-user@${aws_instance.bastion.public_ip}"
+  value       = "ssh -i kubox.pem ec2-user@${aws_instance.bastion.public_ip}"
 }
