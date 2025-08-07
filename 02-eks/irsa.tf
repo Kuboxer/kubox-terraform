@@ -108,3 +108,68 @@ resource "aws_iam_role_policy_attachment" "external_dns_irsa" {
   policy_arn = aws_iam_policy.external_dns.arn
   role       = aws_iam_role.external_dns_irsa.name
 }
+
+# S3용 IRSA 역할
+resource "aws_iam_role" "s3_access_irsa" {
+  name = "${var.cluster_name}-s3-access"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks_oidc.arn
+        }
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+          StringLike = {
+            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:sub" = "system:serviceaccount:*:s3-sa"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name    = "${var.cluster_name}-s3-access-irsa"
+    Project = var.project_name
+  }
+}
+
+# S3 정책 - AWS 관리형 정책 사용
+# resource "aws_iam_policy" "s3_access" {
+#   name = "${var.cluster_name}-s3-access"
+
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect = "Allow"
+#         Action = [
+#           "s3:GetObject",
+#           "s3:PutObject",
+#           "s3:DeleteObject",
+#           "s3:ListBucket"
+#         ]
+#         Resource = [
+#           "arn:aws:s3:::kubox-*",
+#           "arn:aws:s3:::kubox-*/*"
+#         ]
+#       }
+#     ]
+#   })
+
+#   tags = {
+#     Name    = "${var.cluster_name}-s3-access-policy"
+#     Project = var.project_name
+#   }
+# }
+
+resource "aws_iam_role_policy_attachment" "s3_access_irsa" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+  role       = aws_iam_role.s3_access_irsa.name
+}

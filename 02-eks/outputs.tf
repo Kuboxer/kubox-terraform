@@ -29,15 +29,23 @@ output "cluster_certificate_authority_data" {
   value       = aws_eks_cluster.kubox_cluster.certificate_authority[0].data
 }
 
-# 노드 그룹 정보
-output "node_group_arn" {
-  description = "EKS node group ARN"
-  value       = aws_eks_node_group.kubox_node_group.arn
+# 워커 노드 정보
+output "worker_node_1_id" {
+  description = "Worker node 1 instance ID"
+  value       = aws_instance.worker_node_1.id
 }
 
-output "node_group_status" {
-  description = "EKS node group status"
-  value       = aws_eks_node_group.kubox_node_group.status
+output "worker_node_2_id" {
+  description = "Worker node 2 instance ID"
+  value       = aws_instance.worker_node_2.id
+}
+
+output "worker_node_ips" {
+  description = "Worker nodes private IP addresses"
+  value = {
+    worker_1 = aws_instance.worker_node_1.private_ip
+    worker_2 = aws_instance.worker_node_2.private_ip
+  }
 }
 
 # 보안그룹 정보
@@ -58,10 +66,12 @@ output "deployment_info" {
   value = {
     cluster_name    = aws_eks_cluster.kubox_cluster.name
     cluster_version = aws_eks_cluster.kubox_cluster.version
-    node_group_name = aws_eks_node_group.kubox_node_group.node_group_name
-    capacity_type   = var.node_capacity_type
-    instance_types  = var.node_instance_types
-    desired_nodes   = var.node_desired_size
+    worker_nodes    = {
+      worker_1 = aws_instance.worker_node_1.id
+      worker_2 = aws_instance.worker_node_2.id
+    }
+    instance_type   = "t3.micro"
+    capacity_type   = "SPOT"
     region         = var.region
     created_at     = timestamp()
   }
@@ -76,4 +86,14 @@ output "oidc_provider_arn" {
 output "aws_load_balancer_controller_role_arn" {
   description = "ARN of AWS Load Balancer Controller IRSA role"
   value       = aws_iam_role.aws_load_balancer_controller_irsa.arn
+}
+
+output "s3_access_role_arn" {
+  description = "ARN of S3 access IRSA role"
+  value       = aws_iam_role.s3_access_irsa.arn
+}
+
+output "s3_service_account_name" {
+  description = "Name of S3 service account"
+  value       = kubernetes_service_account.s3_service_account.metadata[0].name
 }
