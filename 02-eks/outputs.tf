@@ -70,7 +70,7 @@ output "deployment_info" {
       worker_1 = aws_instance.worker_node_1.id
       worker_2 = aws_instance.worker_node_2.id
     }
-    instance_type   = "t3.micro"
+    instance_type   = "t3.medium"
     capacity_type   = "SPOT"
     region         = var.region
     created_at     = timestamp()

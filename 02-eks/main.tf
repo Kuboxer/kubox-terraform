@@ -95,14 +95,14 @@ resource "aws_iam_role_policy_attachment" "eks_container_registry_policy" {
 # EKS 워커 노드 1
 resource "aws_instance" "worker_node_1" {
   ami           = data.aws_ssm_parameter.eks_ami.value
-  instance_type = "t3.micro"
+  instance_type = "t3.medium"
   key_name      = "kubox"
   
   # 스팟 인스턴스 설정
   instance_market_options {
     market_type = "spot"
     spot_options {
-      max_price = "0.0104"
+      max_price = "0.0416"
     }
   }
   
@@ -127,14 +127,14 @@ resource "aws_instance" "worker_node_1" {
 # EKS 워커 노드 2
 resource "aws_instance" "worker_node_2" {
   ami           = data.aws_ssm_parameter.eks_ami.value
-  instance_type = "t3.micro"
+  instance_type = "t3.medium"
   key_name      = "kubox"
   
   # 스팟 인스턴스 설정
   instance_market_options {
     market_type = "spot"
     spot_options {
-      max_price = "0.0104"
+      max_price = "0.0416"
     }
   }
   
@@ -240,99 +240,6 @@ resource "aws_iam_policy" "aws_load_balancer_controller" {
   }
 }
 
-# ===========================================
-# EBS CSI Driver를 위한 IAM 역할 및 IRSA
-# ===========================================
 
-# EBS CSI Driver를 위한 IAM 정책
-resource "aws_iam_policy" "ebs_csi_driver_policy" {
-  name = "${var.cluster_name}-ebs-csi-driver-policy"
-  
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ec2:AttachVolume",
-          "ec2:CreateSnapshot",
-          "ec2:CreateTags",
-          "ec2:CreateVolume",
-          "ec2:DeleteSnapshot",
-          "ec2:DeleteTags",
-          "ec2:DeleteVolume",
-          "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeInstances",
-          "ec2:DescribeSnapshots",
-          "ec2:DescribeTags",
-          "ec2:DescribeVolumes",
-          "ec2:DescribeVolumesModifications",
-          "ec2:DetachVolume",
-          "ec2:ModifyVolume"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-
-  tags = {
-    Name    = "${var.cluster_name}-ebs-csi-driver-policy"
-    Project = var.project_name
-  }
-}
-
-# EBS CSI Driver를 위한 IAM 역할 (IRSA 용)
-resource "aws_iam_role" "ebs_csi_driver_role" {
-  name = "${var.cluster_name}-ebs-csi-driver-role"
-  
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Federated = aws_iam_openid_connect_provider.eks_oidc.arn
-        }
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Condition = {
-          StringEquals = {
-            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
-            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:aud" = "sts.amazonaws.com"
-          }
-        }
-      }
-    ]
-  })
-  
-  tags = {
-    Name    = "${var.cluster_name}-ebs-csi-driver-role"
-    Project = var.project_name
-  }
-}
-
-# EBS CSI Driver 역할에 정책 연결
-resource "aws_iam_role_policy_attachment" "ebs_csi_driver_policy_attachment" {
-  role       = aws_iam_role.ebs_csi_driver_role.name
-  policy_arn = aws_iam_policy.ebs_csi_driver_policy.arn
-}
-
-# EKS 애드온: EBS CSI Driver
-resource "aws_eks_addon" "ebs_csi_driver" {
-  cluster_name         = aws_eks_cluster.kubox_cluster.name
-  addon_name          = "aws-ebs-csi-driver"
-  addon_version       = "v1.32.0-eksbuild.1"
-  service_account_role_arn = aws_iam_role.ebs_csi_driver_role.arn
-  
-  depends_on = [
-    aws_instance.worker_node_1,
-    aws_instance.worker_node_2,
-    aws_iam_role_policy_attachment.ebs_csi_driver_policy_attachment
-  ]
-  
-  tags = {
-    Name    = "${var.cluster_name}-ebs-csi-driver"
-    Project = var.project_name
-  }
-}
 
 
