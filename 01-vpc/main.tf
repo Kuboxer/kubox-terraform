@@ -24,6 +24,7 @@ resource "aws_subnet" "public_subnet_a" {
   tags = {
     Name = "public-subnet-a"
     Description = "NAT Gateway subnet"
+    "kubernetes.io/role/elb" = "1"
   }
 }
 
@@ -36,6 +37,7 @@ resource "aws_subnet" "public_subnet_c" {
   
   tags = {
     Name = "public-subnet-c"
+    "kubernetes.io/role/elb" = "1"
   }
 }
 
@@ -48,6 +50,7 @@ resource "aws_subnet" "private_subnet_a" {
   tags = {
     Name = "private-subnet-a"
     Description = "EKS worker nodes subnet"
+    "kubernetes.io/role/internal-elb" = "1"
   }
 }
 
@@ -60,6 +63,7 @@ resource "aws_subnet" "private_subnet_c" {
   tags = {
     Name = "private-subnet-c"
     Description = "EKS worker nodes subnet"
+    "kubernetes.io/role/internal-elb" = "1"
   }
 }
 
