@@ -10,6 +10,14 @@ data "aws_lb" "kubox_alb" {
   name = "kubox-alb"
 }
 
+# AWS Load Balancer Controller IAM Policy
+resource "aws_iam_policy" "aws_load_balancer_controller" {
+  name        = "kubox-cluster-aws-load-balancer-controller"
+  description = "IAM policy for AWS Load Balancer Controller"
+  
+  policy = file("${path.module}/iam-policy.json")
+}
+
 # HTTP API Gateway (ALB 직접 지원)
 resource "aws_apigatewayv2_api" "kubox_api_eks" {
   name          = "kubox-api-eks"
