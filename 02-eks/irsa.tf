@@ -45,7 +45,12 @@ resource "aws_iam_role" "aws_load_balancer_controller_irsa" {
 }
 
 # AWS Load Balancer Controller 정책 연결
-resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller_irsa" {
+resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller_elb" {
+  policy_arn = "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"
+  role       = aws_iam_role.aws_load_balancer_controller_irsa.name
+}
+
+resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller_custom" {
   policy_arn = aws_iam_policy.aws_load_balancer_controller.arn
   role       = aws_iam_role.aws_load_balancer_controller_irsa.name
 }

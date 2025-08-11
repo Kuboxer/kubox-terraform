@@ -6,34 +6,12 @@ data "aws_vpc" "kubox" {
   }
 }
 
+# ALB를 이름으로 찾기
 data "aws_lb" "kubox_alb" {
   name = "kubox-alb"
 }
 
-# AWS Load Balancer Controller IAM Policy
-resource "aws_iam_policy" "aws_load_balancer_controller" {
-  name        = "kubox-cluster-aws-load-balancer-controller"
-  description = "IAM policy for AWS Load Balancer Controller"
-  
-  policy = file("${path.module}/iam-policy.json")
-}
-
-# HTTP API Gateway (ALB 직접 지원)
-resource "aws_apigatewayv2_api" "kubox_api_eks" {
-  name          = "kubox-api-eks"
-  protocol_type = "HTTP"
-  description   = "Kubox EKS HTTP API Gateway"
-  
-  cors_configuration {
-    allow_credentials = false
-    allow_headers     = ["*"]
-    allow_methods     = ["*"]
-    allow_origins     = ["*"]
-    max_age          = 300
-  }
-}
-
-# Get private subnets
+# Private 서브넷들 (EKS 태그 기준)
 data "aws_subnets" "private" {
   filter {
     name   = "vpc-id"
@@ -41,25 +19,40 @@ data "aws_subnets" "private" {
   }
   
   filter {
-    name   = "tag:Name"
-    values = ["*private*"]
+    name   = "tag:Description"
+    values = ["EKS worker nodes subnet"]
   }
 }
 
-# Get default security group
+# Default 보안그룹
 data "aws_security_group" "default" {
   name   = "default"
   vpc_id = data.aws_vpc.kubox.id
 }
 
-# VPC Link for HTTP API (ALB 지원)
+# HTTP API Gateway
+resource "aws_apigatewayv2_api" "kubox_api_eks" {
+  name          = "kubox-api-eks"
+  protocol_type = "HTTP"
+  description   = "Kubox EKS HTTP API Gateway"
+  
+  cors_configuration {
+    allow_credentials = true
+    allow_headers     = ["*"]
+    allow_methods     = ["*"]
+    allow_origins     = ["https://www.kubox.shop", "https://kubox.shop"]
+    max_age          = 300
+  }
+}
+
+# VPC Link
 resource "aws_apigatewayv2_vpc_link" "kubox" {
   name               = "kubox-vpc-link"
   security_group_ids = [data.aws_security_group.default.id]
   subnet_ids         = data.aws_subnets.private.ids
 }
 
-# Get ALB listener
+# ALB Listener
 data "aws_lb_listener" "kubox_alb" {
   load_balancer_arn = data.aws_lb.kubox_alb.arn
   port              = 80
@@ -76,64 +69,47 @@ resource "aws_apigatewayv2_integration" "kubox" {
   connection_id      = aws_apigatewayv2_vpc_link.kubox.id
 }
 
-# Route for each service
-resource "aws_apigatewayv2_route" "users" {
+# 라우트 설정
+locals {
+  # payment를 payment로 대체하고 우선순위 지정
+  api_services = ["payment", "users", "products", "orders", "cart"]
+  route_methods = ["ANY", "OPTIONS"]
+}
+
+# 각 서비스별 기본 라우트 (ANY, OPTIONS)
+resource "aws_apigatewayv2_route" "api_base_routes" {
+  for_each = {
+    for combination in setproduct(local.api_services, local.route_methods) :
+    "${combination[0]}-${combination[1]}" => {
+      service = combination[0]
+      method = combination[1]
+    }
+  }
+  
   api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "ANY /api/users"
+  route_key = "${each.value.method} /api/${each.value.service}"
   target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
 }
 
-resource "aws_apigatewayv2_route" "users_proxy" {
+# 각 서비스별 프록시 라우트 (ANY, OPTIONS)  
+resource "aws_apigatewayv2_route" "api_proxy_routes" {
+  for_each = {
+    for combination in setproduct(local.api_services, local.route_methods) :
+    "${combination[0]}-${combination[1]}-proxy" => {
+      service = combination[0]
+      method = combination[1]
+    }
+  }
+  
   api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "ANY /api/users/{proxy+}"
+  route_key = "${each.value.method} /api/${each.value.service}/{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
 }
 
-resource "aws_apigatewayv2_route" "products" {
+# 기본 라우트 (catchall)
+resource "aws_apigatewayv2_route" "default" {
   api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "ANY /api/products"
-  target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
-}
-
-resource "aws_apigatewayv2_route" "products_proxy" {
-  api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "ANY /api/products/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
-}
-
-resource "aws_apigatewayv2_route" "orders" {
-  api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "ANY /api/orders"
-  target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
-}
-
-resource "aws_apigatewayv2_route" "orders_proxy" {
-  api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "ANY /api/orders/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
-}
-
-resource "aws_apigatewayv2_route" "cart" {
-  api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "ANY /api/cart"
-  target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
-}
-
-resource "aws_apigatewayv2_route" "cart_proxy" {
-  api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "ANY /api/cart/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
-}
-
-resource "aws_apigatewayv2_route" "payments" {
-  api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "ANY /api/payments"
-  target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
-}
-
-resource "aws_apigatewayv2_route" "payments_proxy" {
-  api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "ANY /api/payments/{proxy+}"
+  route_key = "$default"
   target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
 }
 
@@ -144,7 +120,7 @@ resource "aws_apigatewayv2_stage" "prod" {
   auto_deploy = true
 }
 
-# ACM Certificate (기존 인증서 사용)
+# ACM Certificate
 data "aws_acm_certificate" "kubox" {
   domain   = "kubox.shop"
   statuses = ["ISSUED"]
@@ -181,7 +157,7 @@ resource "aws_route53_record" "api" {
   }
 }
 
-# Get existing Route 53 zone
+# Route 53 zone
 data "aws_route53_zone" "kubox" {
   name         = "kubox.shop."
   private_zone = false
