@@ -13,7 +13,7 @@ resource "aws_iam_policy" "kubox_secrets_manager_policy" {
           "secretsmanager:DescribeSecret"
         ]
         Resource = [
-          "arn:aws:secretsmanager:us-east-2:*:secret:kubox/*"
+          "arn:aws:secretsmanager:${var.region}:*:secret:kubox/*"
         ]
       }
     ]

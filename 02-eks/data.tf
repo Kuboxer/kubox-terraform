@@ -31,3 +31,8 @@ data "aws_subnets" "public_subnets" {
     values = ["public-subnet-a", "public-subnet-c"]
   }
 }
+
+# EKS 클러스터 인증 정보
+data "aws_eks_cluster_auth" "cluster_auth" {
+  name = aws_eks_cluster.kubox_cluster.name
+}
