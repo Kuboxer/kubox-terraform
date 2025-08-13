@@ -95,15 +95,23 @@ resource "aws_iam_role_policy_attachment" "eks_container_registry_policy" {
 # EKS 워커 노드 1
 resource "aws_instance" "worker_node_1" {
   ami           = data.aws_ssm_parameter.eks_ami.value
-  instance_type = "t3.medium"
+  instance_type = "t3.large"
   key_name      = "kubox"
   
   # 스팟 인스턴스 설정
   instance_market_options {
     market_type = "spot"
     spot_options {
-      max_price = "0.0416"
+      max_price = "0.0832"
     }
+  }
+  
+  # EBS 루트 볼륨 설정
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size          = var.node_disk_size
+    encrypted            = true
+    delete_on_termination = true
   }
   
   subnet_id              = data.aws_subnets.private_subnets.ids[0]
@@ -127,15 +135,23 @@ resource "aws_instance" "worker_node_1" {
 # EKS 워커 노드 2
 resource "aws_instance" "worker_node_2" {
   ami           = data.aws_ssm_parameter.eks_ami.value
-  instance_type = "t3.medium"
+  instance_type = "t3.large"
   key_name      = "kubox"
   
   # 스팟 인스턴스 설정
   instance_market_options {
     market_type = "spot"
     spot_options {
-      max_price = "0.0416"
+      max_price = "0.0832"
     }
+  }
+  
+  # EBS 루트 볼륨 설정
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size          = var.node_disk_size
+    encrypted            = true
+    delete_on_termination = true
   }
   
   subnet_id              = data.aws_subnets.private_subnets.ids[1]
@@ -166,7 +182,3 @@ resource "aws_iam_instance_profile" "eks_node_instance_profile" {
 data "aws_ssm_parameter" "eks_ami" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.kubox_cluster.version}/amazon-linux-2/recommended/image_id"
 }
-
-
-
-
