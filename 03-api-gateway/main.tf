@@ -1,3 +1,38 @@
+# Terraform Configuration
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.20"
+    }
+  }
+}
+
+# AWS Provider
+provider "aws" {
+  region = "us-east-2"
+}
+
+# EKS 클러스터 정보 가져오기
+data "aws_eks_cluster" "kubox" {
+  name = "kubox-cluster"
+}
+
+data "aws_eks_cluster_auth" "kubox" {
+  name = "kubox-cluster"
+}
+
+# Kubernetes Provider
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.kubox.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.kubox.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.kubox.token
+}
+
 # Data sources
 data "aws_vpc" "kubox" {
   filter {
@@ -6,28 +41,12 @@ data "aws_vpc" "kubox" {
   }
 }
 
-# ALB를 이름으로 찾기
-data "aws_lb" "kubox_alb" {
-  name = "kubox-alb"
-}
-
-# Private 서브넷들 (EKS 태그 기준)
-data "aws_subnets" "private" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.kubox.id]
+# Istio Gateway 외부 IP 가져오기
+data "kubernetes_service" "istio_gateway" {
+  metadata {
+    name      = "istio-ingressgateway"
+    namespace = "istio-system"
   }
-  
-  filter {
-    name   = "tag:Description"
-    values = ["EKS worker nodes subnet"]
-  }
-}
-
-# Default 보안그룹
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = data.aws_vpc.kubox.id
 }
 
 # HTTP API Gateway
@@ -45,71 +64,40 @@ resource "aws_apigatewayv2_api" "kubox_api_eks" {
   }
 }
 
-# VPC Link
-resource "aws_apigatewayv2_vpc_link" "kubox" {
-  name               = "kubox-vpc-link"
-  security_group_ids = [data.aws_security_group.default.id]
-  subnet_ids         = data.aws_subnets.private.ids
+# Istio Gateway 연결 설정
+locals {
+  # Istio Gateway LoadBalancer 외부 IP/Hostname 확인
+  istio_gateway_hostname = try(
+    data.kubernetes_service.istio_gateway.status[0].load_balancer[0].ingress[0].hostname,
+    null
+  )
+  istio_gateway_ip = try(
+    data.kubernetes_service.istio_gateway.status[0].load_balancer[0].ingress[0].ip,
+    null
+  )
+  
+  # 최종 타겳 결정 (Hostname 우선, IP 백업)
+  target_hostname = local.istio_gateway_hostname != null ? local.istio_gateway_hostname : local.istio_gateway_ip
 }
 
-# ALB Listener
-data "aws_lb_listener" "kubox_alb" {
-  load_balancer_arn = data.aws_lb.kubox_alb.arn
-  port              = 80
-}
-
-# Integration with ALB
+# Istio Gateway Integration - 경로 보존 방식
 resource "aws_apigatewayv2_integration" "kubox" {
   api_id           = aws_apigatewayv2_api.kubox_api_eks.id
   integration_type = "HTTP_PROXY"
-  integration_uri  = data.aws_lb_listener.kubox_alb.arn
+  
+  # Istio Gateway HTTP 직접 연결 - 경로 보존을 위한 {proxy} 사용
+  integration_uri = "http://${local.target_hostname}/{proxy}"
   
   integration_method = "ANY"
-  connection_type    = "VPC_LINK"
-  connection_id      = aws_apigatewayv2_vpc_link.kubox.id
-}
-
-# 라우트 설정
-locals {
-  # payment를 payment로 대체하고 우선순위 지정
-  api_services = ["payment", "users", "products", "orders", "cart"]
-  route_methods = ["ANY", "OPTIONS"]
-}
-
-# 각 서비스별 기본 라우트 (ANY, OPTIONS)
-resource "aws_apigatewayv2_route" "api_base_routes" {
-  for_each = {
-    for combination in setproduct(local.api_services, local.route_methods) :
-    "${combination[0]}-${combination[1]}" => {
-      service = combination[0]
-      method = combination[1]
-    }
-  }
   
-  api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "${each.value.method} /api/${each.value.service}"
-  target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
+  # 인터넷 직접 연결
+  connection_type = "INTERNET"
 }
 
-# 각 서비스별 프록시 라우트 (ANY, OPTIONS)  
-resource "aws_apigatewayv2_route" "api_proxy_routes" {
-  for_each = {
-    for combination in setproduct(local.api_services, local.route_methods) :
-    "${combination[0]}-${combination[1]}-proxy" => {
-      service = combination[0]
-      method = combination[1]
-    }
-  }
-  
+# 명시적 라우트 설정 - 경로 매핑
+resource "aws_apigatewayv2_route" "api_routes" {
   api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "${each.value.method} /api/${each.value.service}/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
-}
-
-# 기본 라우트 (catchall)
-resource "aws_apigatewayv2_route" "default" {
-  api_id    = aws_apigatewayv2_api.kubox_api_eks.id
-  route_key = "$default"
+  route_key = "ANY /{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.kubox.id}"
 }
 
@@ -172,6 +160,11 @@ output "api_gateway_default_url" {
   value = aws_apigatewayv2_stage.prod.invoke_url
 }
 
-output "vpc_link_id" {
-  value = aws_apigatewayv2_vpc_link.kubox.id
+output "backend_connection_info" {
+  value = {
+    connection_type = "Istio Gateway (Internet)"
+    target_endpoint = "http://${local.target_hostname}"
+    istio_gateway_hostname = local.istio_gateway_hostname
+    istio_gateway_ip = local.istio_gateway_ip
+  }
 }
