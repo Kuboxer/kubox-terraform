@@ -6,7 +6,7 @@ provider "helm" {
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.kubox_cluster.name]
+      args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.kubox_cluster.name, "--region", var.region]
     }
   }
 }
@@ -17,7 +17,7 @@ provider "kubernetes" {
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.kubox_cluster.name]
+    args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.kubox_cluster.name, "--region", var.region]
   }
 }
 
@@ -33,6 +33,13 @@ resource "helm_release" "aws_load_balancer_controller" {
   namespace  = "kube-system"
   version    = "1.8.1"
 
+  depends_on = [
+    aws_eks_cluster.kubox_cluster,
+    aws_instance.worker_node_1,
+    aws_instance.worker_node_2,
+    kubernetes_service_account.aws_load_balancer_controller
+  ]
+
   set {
     name  = "clusterName"
     value = aws_eks_cluster.kubox_cluster.name
@@ -47,10 +54,6 @@ resource "helm_release" "aws_load_balancer_controller" {
     name  = "serviceAccount.name"
     value = "aws-load-balancer-controller"
   }
-
-  depends_on = [
-    kubernetes_service_account.aws_load_balancer_controller
-  ]
 }
 
 # AWS Load Balancer Controller ServiceAccount
@@ -73,6 +76,12 @@ resource "helm_release" "metrics_server" {
   chart      = "metrics-server"
   namespace  = "kube-system"
   version    = "3.12.1"
+
+  depends_on = [
+    aws_eks_cluster.kubox_cluster,
+    aws_instance.worker_node_1,
+    aws_instance.worker_node_2
+  ]
 
   set {
     name  = "args"

@@ -12,6 +12,7 @@ resource "helm_release" "istio_base" {
   version          = "1.19.3"
 
   depends_on = [
+    aws_eks_cluster.kubox_cluster,
     aws_instance.worker_node_1,
     aws_instance.worker_node_2
   ]

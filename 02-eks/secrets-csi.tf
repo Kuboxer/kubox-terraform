@@ -10,6 +10,12 @@ resource "helm_release" "secrets_store_csi_driver" {
   namespace  = "kube-system"
   version    = "1.3.4"
 
+  depends_on = [
+    aws_eks_cluster.kubox_cluster,
+    aws_instance.worker_node_1,
+    aws_instance.worker_node_2
+  ]
+
   set {
     name  = "syncSecret.enabled"
     value = "true"
@@ -24,8 +30,6 @@ resource "helm_release" "secrets_store_csi_driver" {
     name  = "rotationPollInterval"
     value = "30s"
   }
-
-  depends_on = [aws_eks_cluster.kubox_cluster]
 }
 
 # AWS Secrets Manager Provider Helm Chart (표준 방식)
