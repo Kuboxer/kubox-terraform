@@ -32,12 +32,16 @@ resource "helm_release" "aws_load_balancer_controller" {
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
   version    = "1.8.1"
+  timeout    = 600
+  wait       = true
+  wait_for_jobs = true
+  atomic     = true
 
   depends_on = [
     aws_eks_cluster.kubox_cluster,
-    aws_instance.worker_node_1,
-    aws_instance.worker_node_2,
-    kubernetes_service_account.aws_load_balancer_controller
+    aws_eks_node_group.kubox_node_group,
+    kubernetes_service_account.aws_load_balancer_controller,
+    aws_iam_role_policy_attachment.aws_load_balancer_controller_custom
   ]
 
   set {
@@ -53,6 +57,21 @@ resource "helm_release" "aws_load_balancer_controller" {
   set {
     name  = "serviceAccount.name"
     value = "aws-load-balancer-controller"
+  }
+
+  set {
+    name  = "region"
+    value = var.region
+  }
+
+  set {
+    name  = "vpcId"
+    value = data.aws_vpc.kubox_vpc.id
+  }
+
+  set {
+    name  = "enableServiceMutatorWebhook"
+    value = "false"
   }
 }
 
@@ -79,8 +98,7 @@ resource "helm_release" "metrics_server" {
 
   depends_on = [
     aws_eks_cluster.kubox_cluster,
-    aws_instance.worker_node_1,
-    aws_instance.worker_node_2
+    aws_eks_node_group.kubox_node_group
   ]
 
   set {
@@ -99,5 +117,8 @@ resource "kubernetes_service_account" "s3_service_account" {
     }
   }
 
-  depends_on = [aws_iam_role.s3_access_irsa]
+  depends_on = [
+    aws_iam_role.s3_access_irsa,
+    kubernetes_namespace.app-services
+  ]
 }

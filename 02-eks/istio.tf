@@ -13,8 +13,7 @@ resource "helm_release" "istio_base" {
 
   depends_on = [
     aws_eks_cluster.kubox_cluster,
-    aws_instance.worker_node_1,
-    aws_instance.worker_node_2
+    aws_eks_node_group.kubox_node_group
   ]
 }
 
@@ -91,7 +90,7 @@ resource "kubernetes_annotations" "default_istio_injection" {
 }
 
 # MSA 네임스페이스 생성 및 Istio 주입 활성화
-resource "kubernetes_namespace" "user_ns" {
+resource "kubernetes_namespace" "app-services" {
   metadata {
     name = "app-services"
     labels = {

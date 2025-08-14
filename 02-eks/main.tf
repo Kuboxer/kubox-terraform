@@ -92,93 +92,46 @@ resource "aws_iam_role_policy_attachment" "eks_container_registry_policy" {
   role       = aws_iam_role.eks_node_role.name
 }
 
-# EKS 워커 노드 1
-resource "aws_instance" "worker_node_1" {
-  ami           = data.aws_ssm_parameter.eks_ami.value
-  instance_type = "t3.large"
-  key_name      = "kubox"
+# EKS Managed Node Group
+resource "aws_eks_node_group" "kubox_node_group" {
+  cluster_name    = aws_eks_cluster.kubox_cluster.name
+  node_group_name = "${var.cluster_name}-node-group"
+  node_role_arn   = aws_iam_role.eks_node_role.arn
+  subnet_ids      = data.aws_subnets.private_subnets.ids
+
+  # 인스턴스 설정
+  instance_types = ["t3.large"]
+  capacity_type  = "SPOT"  # 비용 절약을 위해 스팟 인스턴스 사용
   
-  # 스팟 인스턴스 설정
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      max_price = "0.0832"
-    }
+  # 스케일링 설정 (고정 2개)
+  scaling_config {
+    desired_size = 2
+    max_size     = 2
+    min_size     = 2
   }
-  
-  # EBS 루트 볼륨 설정
-  root_block_device {
-    volume_type           = "gp3"
-    volume_size          = var.node_disk_size
-    encrypted            = true
-    delete_on_termination = true
+
+  # 업데이트 설정
+  update_config {
+    max_unavailable = 1
   }
-  
-  subnet_id              = data.aws_subnets.private_subnets.ids[0]
-  vpc_security_group_ids = [aws_eks_cluster.kubox_cluster.vpc_config[0].cluster_security_group_id]
-  iam_instance_profile   = aws_iam_instance_profile.eks_node_instance_profile.name
-  
-  # EKS 부트스트랩 스크립트
-  user_data = base64encode(templatefile("${path.module}/userdata.tpl", {
-    cluster_name = aws_eks_cluster.kubox_cluster.name
-    endpoint     = aws_eks_cluster.kubox_cluster.endpoint
-    ca_data      = aws_eks_cluster.kubox_cluster.certificate_authority[0].data
-  }))
+
+  # 디스크 설정
+  disk_size = var.node_disk_size
+
+  # SSH 접근을 위한 키 설정
+  remote_access {
+    ec2_ssh_key = "kubox"
+  }
+
+  # 의존성 설정
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_worker_node_policy,
+    aws_iam_role_policy_attachment.eks_cni_policy,
+    aws_iam_role_policy_attachment.eks_container_registry_policy,
+  ]
 
   tags = {
-    Name    = "kubox-worker-1"
+    Name    = "${var.cluster_name}-node-group"
     Project = var.project_name
-    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
-}
-
-# EKS 워커 노드 2
-resource "aws_instance" "worker_node_2" {
-  ami           = data.aws_ssm_parameter.eks_ami.value
-  instance_type = "t3.large"
-  key_name      = "kubox"
-  
-  # 스팟 인스턴스 설정
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      max_price = "0.0832"
-    }
-  }
-  
-  # EBS 루트 볼륨 설정
-  root_block_device {
-    volume_type           = "gp3"
-    volume_size          = var.node_disk_size
-    encrypted            = true
-    delete_on_termination = true
-  }
-  
-  subnet_id              = data.aws_subnets.private_subnets.ids[1]
-  vpc_security_group_ids = [aws_eks_cluster.kubox_cluster.vpc_config[0].cluster_security_group_id]
-  iam_instance_profile   = aws_iam_instance_profile.eks_node_instance_profile.name
-  
-  # EKS 부트스트랩 스크립트
-  user_data = base64encode(templatefile("${path.module}/userdata.tpl", {
-    cluster_name = aws_eks_cluster.kubox_cluster.name
-    endpoint     = aws_eks_cluster.kubox_cluster.endpoint
-    ca_data      = aws_eks_cluster.kubox_cluster.certificate_authority[0].data
-  }))
-
-  tags = {
-    Name    = "kubox-worker-2"
-    Project = var.project_name
-    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
-  }
-}
-
-# IAM Instance Profile for worker nodes
-resource "aws_iam_instance_profile" "eks_node_instance_profile" {
-  name = "${var.cluster_name}-node-instance-profile"
-  role = aws_iam_role.eks_node_role.name
-}
-
-# EKS 최적화 AMI 정보 가져오기
-data "aws_ssm_parameter" "eks_ami" {
-  name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.kubox_cluster.version}/amazon-linux-2/recommended/image_id"
 }

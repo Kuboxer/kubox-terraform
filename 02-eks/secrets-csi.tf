@@ -12,8 +12,7 @@ resource "helm_release" "secrets_store_csi_driver" {
 
   depends_on = [
     aws_eks_cluster.kubox_cluster,
-    aws_instance.worker_node_1,
-    aws_instance.worker_node_2
+    aws_eks_node_group.kubox_node_group
   ]
 
   set {

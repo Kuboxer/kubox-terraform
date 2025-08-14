@@ -29,23 +29,20 @@ output "cluster_certificate_authority_data" {
   value       = aws_eks_cluster.kubox_cluster.certificate_authority[0].data
 }
 
-# 워커 노드 정보
-output "worker_node_1_id" {
-  description = "Worker node 1 instance ID"
-  value       = aws_instance.worker_node_1.id
+# 노드 그룹 정보
+output "node_group_arn" {
+  description = "EKS node group ARN"
+  value       = aws_eks_node_group.kubox_node_group.arn
 }
 
-output "worker_node_2_id" {
-  description = "Worker node 2 instance ID"
-  value       = aws_instance.worker_node_2.id
+output "node_group_status" {
+  description = "EKS node group status"
+  value       = aws_eks_node_group.kubox_node_group.status
 }
 
-output "worker_node_ips" {
-  description = "Worker nodes private IP addresses"
-  value = {
-    worker_1 = aws_instance.worker_node_1.private_ip
-    worker_2 = aws_instance.worker_node_2.private_ip
-  }
+output "node_group_capacity_type" {
+  description = "EKS node group capacity type"
+  value       = aws_eks_node_group.kubox_node_group.capacity_type
 }
 
 # 보안그룹 정보
@@ -66,12 +63,14 @@ output "deployment_info" {
   value = {
     cluster_name    = aws_eks_cluster.kubox_cluster.name
     cluster_version = aws_eks_cluster.kubox_cluster.version
-    worker_nodes    = {
-      worker_1 = aws_instance.worker_node_1.id
-      worker_2 = aws_instance.worker_node_2.id
+    node_group = {
+      name         = aws_eks_node_group.kubox_node_group.node_group_name
+      arn          = aws_eks_node_group.kubox_node_group.arn
+      status       = aws_eks_node_group.kubox_node_group.status
+      desired_size = aws_eks_node_group.kubox_node_group.scaling_config[0].desired_size
     }
-    instance_type   = "t3.medium"
-    capacity_type   = "SPOT"
+    instance_types  = aws_eks_node_group.kubox_node_group.instance_types
+    capacity_type   = aws_eks_node_group.kubox_node_group.capacity_type
     region         = var.region
     created_at     = timestamp()
   }

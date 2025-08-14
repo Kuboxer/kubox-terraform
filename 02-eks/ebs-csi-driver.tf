@@ -63,8 +63,7 @@ resource "aws_eks_addon" "ebs_csi_driver" {
   resolve_conflicts_on_update = "OVERWRITE"
   
   depends_on = [
-    aws_instance.worker_node_1,
-    aws_instance.worker_node_2,
+    aws_eks_node_group.kubox_node_group,
     aws_iam_role_policy_attachment.ebs_csi_driver_policy,
     kubernetes_service_account.ebs_csi_controller_sa
   ]

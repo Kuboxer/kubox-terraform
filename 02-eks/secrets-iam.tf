@@ -60,5 +60,8 @@ resource "kubernetes_service_account" "kubox_secrets_sa" {
     }
   }
 
-  depends_on = [aws_eks_cluster.kubox_cluster]
+  depends_on = [
+    aws_eks_cluster.kubox_cluster,
+    kubernetes_namespace.app-services
+  ]
 }
