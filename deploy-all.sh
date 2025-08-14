@@ -14,8 +14,8 @@ terraform apply -auto-approve
 
 echo "3. EKS 리소스 배포..."
 cd /Users/choiyunha/kubox-eks
-
-./deploy.sh
+aws eks update-kubeconfig --region us-east-2 --name kubox-cluster
+./deploy-istio.sh
 
 echo "4. API Gateway 생성..."
 cd /Users/choiyunha/kubox-terraform/03-api-gateway
