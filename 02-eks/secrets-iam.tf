@@ -35,7 +35,7 @@ resource "aws_iam_role" "kubox_secrets_sa_role" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
-            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:sub" = "system:serviceaccount:default:kubox-secrets-sa"
+            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:sub" = "system:serviceaccount:app-services:kubox-secrets-sa"
             "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:aud" = "sts.amazonaws.com"
           }
         }
@@ -54,7 +54,7 @@ resource "aws_iam_role_policy_attachment" "kubox_secrets_sa_policy_attachment" {
 resource "kubernetes_service_account" "kubox_secrets_sa" {
   metadata {
     name      = "kubox-secrets-sa"
-    namespace = "default"
+    namespace = "app-services"
     annotations = {
       "eks.amazonaws.com/role-arn" = aws_iam_role.kubox_secrets_sa_role.arn
     }

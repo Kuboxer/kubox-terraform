@@ -17,7 +17,7 @@ resource "helm_release" "kiali" {
 
   set_list {
     name  = "deployment.accessible_namespaces"
-    value = ["istio-system", "default", "user-ns", "product-ns", "order-ns", "payment-ns", "cart-ns"]
+    value = ["istio-system", "default", "app-services"]
   }
 
   set {

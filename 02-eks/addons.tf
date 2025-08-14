@@ -93,7 +93,7 @@ resource "helm_release" "metrics_server" {
 resource "kubernetes_service_account" "s3_service_account" {
   metadata {
     name      = "s3-sa"
-    namespace = "default"
+    namespace = "app-services"
     annotations = {
       "eks.amazonaws.com/role-arn" = aws_iam_role.s3_access_irsa.arn
     }

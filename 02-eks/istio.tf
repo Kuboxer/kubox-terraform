@@ -90,54 +90,10 @@ resource "kubernetes_annotations" "default_istio_injection" {
   depends_on = [helm_release.istiod]
 }
 
-# MSA 네임스페이스들 생성 및 Istio 주입 활성화
+# MSA 네임스페이스 생성 및 Istio 주입 활성화
 resource "kubernetes_namespace" "user_ns" {
   metadata {
-    name = "user-ns"
-    labels = {
-      "istio-injection" = "enabled"
-    }
-  }
-
-  depends_on = [helm_release.istiod]
-}
-
-resource "kubernetes_namespace" "product_ns" {
-  metadata {
-    name = "product-ns"
-    labels = {
-      "istio-injection" = "enabled"
-    }
-  }
-
-  depends_on = [helm_release.istiod]
-}
-
-resource "kubernetes_namespace" "order_ns" {
-  metadata {
-    name = "order-ns"
-    labels = {
-      "istio-injection" = "enabled"
-    }
-  }
-
-  depends_on = [helm_release.istiod]
-}
-
-resource "kubernetes_namespace" "payment_ns" {
-  metadata {
-    name = "payment-ns"
-    labels = {
-      "istio-injection" = "enabled"
-    }
-  }
-
-  depends_on = [helm_release.istiod]
-}
-
-resource "kubernetes_namespace" "cart_ns" {
-  metadata {
-    name = "cart-ns"
+    name = "app-services"
     labels = {
       "istio-injection" = "enabled"
     }
