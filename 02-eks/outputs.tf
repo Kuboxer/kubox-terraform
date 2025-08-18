@@ -96,3 +96,31 @@ output "s3_service_account_name" {
   description = "Name of S3 service account"
   value       = kubernetes_service_account.s3_service_account.metadata[0].name
 }
+
+# Karpenter 관련 출력
+output "karpenter_controller_role_arn" {
+  description = "ARN of Karpenter Controller IRSA role"
+  value       = aws_iam_role.karpenter_controller.arn
+}
+
+output "karpenter_node_role_arn" {
+  description = "ARN of Karpenter Node IAM role"
+  value       = aws_iam_role.karpenter_node.arn
+}
+
+output "karpenter_sqs_queue_name" {
+  description = "Name of Karpenter SQS queue for interruption handling"
+  value       = aws_sqs_queue.karpenter.name
+}
+
+output "karpenter_info" {
+  description = "Karpenter deployment information"
+  value = {
+    controller_role_arn = aws_iam_role.karpenter_controller.arn
+    node_role_arn      = aws_iam_role.karpenter_node.arn
+    sqs_queue_name     = aws_sqs_queue.karpenter.name
+    nodepool_workload  = "workload-nodepool"
+    ec2nodeclass       = "default"
+    status             = "deployed"
+  }
+}

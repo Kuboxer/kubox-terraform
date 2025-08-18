@@ -110,34 +110,57 @@ resource "helm_release" "prometheus" {
   depends_on = [helm_release.istiod]
 }
 
-# Grafana 설치 (메트릭 시각화)
+# Grafana 설치 (메트릭 시각화) - 리소스 완화 버전
 resource "helm_release" "grafana" {
   name             = "grafana"
   repository       = "https://grafana.github.io/helm-charts"
   chart            = "grafana"
   namespace        = "istio-system"
   version          = "6.58.9"
+  
+  timeout = 900  # 15분으로 늘리기
+  wait    = true
 
-  set {
-    name  = "persistence.enabled"
-    value = "false"
-  }
-
-  set {
-    name  = "adminPassword"
-    value = "admin"
-  }
-
-  set {
-    name  = "service.type"
-    value = "ClusterIP"
-  }
-
-  # Istio 대시보드 설정
-  set {
-    name  = "dashboardProviders.dashboardproviders\\.yaml.apiVersion"
-    value = "1"
-  }
+  values = [
+    yamlencode({
+      persistence = {
+        enabled = false
+      }
+      adminPassword = "admin"
+      service = {
+        type = "ClusterIP"
+      }
+      resources = {
+        requests = {
+          cpu    = "100m"    # 리소스 요구량 줄이기
+          memory = "128Mi"
+        }
+        limits = {
+          cpu    = "500m"
+          memory = "512Mi"
+        }
+      }
+      # 모든 노드에서 실행 가능하도록 toleration 추가
+      tolerations = [
+        {
+          key    = "node-type"
+          operator = "Exists"
+          effect = "NoSchedule"
+        }
+      ]
+      securityContext = {
+        runAsUser  = 472
+        runAsGroup = 472
+        fsGroup    = 472
+      }
+      # Istio 대시보드 설정
+      dashboardProviders = {
+        "dashboardproviders.yaml" = {
+          apiVersion = 1
+        }
+      }
+    })
+  ]
 
   depends_on = [
     helm_release.istiod,

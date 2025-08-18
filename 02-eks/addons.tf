@@ -1,26 +1,3 @@
-# Helm 및 Kubernetes Provider 설정
-provider "helm" {
-  kubernetes {
-    host                   = aws_eks_cluster.kubox_cluster.endpoint
-    cluster_ca_certificate = base64decode(aws_eks_cluster.kubox_cluster.certificate_authority[0].data)
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.kubox_cluster.name, "--region", var.region]
-    }
-  }
-}
-
-provider "kubernetes" {
-  host                   = aws_eks_cluster.kubox_cluster.endpoint
-  cluster_ca_certificate = base64decode(aws_eks_cluster.kubox_cluster.certificate_authority[0].data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.kubox_cluster.name, "--region", var.region]
-  }
-}
-
 # ===========================================
 # AWS Load Balancer Controller 설치
 # ===========================================
@@ -72,6 +49,32 @@ resource "helm_release" "aws_load_balancer_controller" {
   set {
     name  = "enableServiceMutatorWebhook"
     value = "false"
+  }
+
+  # 리소스 최적화
+  set {
+    name  = "resources.requests.cpu"
+    value = "50m"
+  }
+
+  set {
+    name  = "resources.requests.memory"
+    value = "128Mi"
+  }
+
+  set {
+    name  = "resources.limits.cpu"
+    value = "200m"
+  }
+
+  set {
+    name  = "resources.limits.memory"
+    value = "256Mi"
+  }
+
+  set {
+    name  = "replicaCount"
+    value = "1"  # 2개에서 1개로 줄이기
   }
 }
 

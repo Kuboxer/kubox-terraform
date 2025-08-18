@@ -21,7 +21,7 @@ variable "cluster_name" {
 variable "cluster_version" {
   description = "EKS cluster Kubernetes version"
   type        = string
-  default     = "1.31"
+  default     = "1.32"
 }
 
 # EKS 워커 노드 설정 (EC2 인스턴스 직접 생성)
