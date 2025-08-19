@@ -78,12 +78,12 @@ spec:
       - key: node.kubernetes.io/instance-type
         operator: In
         values: ["t3.large"]
-      expireAfter: 30m
+      expireAfter: 2h
   limits:
     cpu: 1000
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
-    consolidateAfter: 30s
+    consolidateAfter: 5m
 EOF
 
       echo "Karpenter NodeClass and NodePool created successfully!"

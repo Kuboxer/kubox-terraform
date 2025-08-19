@@ -458,6 +458,6 @@ resource "helm_release" "karpenter" {
     null_resource.helm_registry_login,
     kubernetes_service_account.karpenter,
     aws_iam_role_policy_attachment.karpenter_controller,
-    kubernetes_config_map.aws_auth
+    kubernetes_config_map_v1_data.aws_auth
   ]
 }

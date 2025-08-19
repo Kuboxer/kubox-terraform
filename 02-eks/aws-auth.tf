@@ -1,5 +1,5 @@
-# AWS Auth ConfigMap for worker nodes (MNG + Karpenter) - 기존 것 있으면 가져오기
-resource "kubernetes_config_map" "aws_auth" {
+# Import existing aws-auth configmap if it exists
+resource "kubernetes_config_map_v1_data" "aws_auth" {
   metadata {
     name      = "aws-auth"
     namespace = "kube-system"
@@ -33,7 +33,6 @@ resource "kubernetes_config_map" "aws_auth" {
     aws_eks_node_group.kubox_node_group
   ]
 
-  lifecycle {
-    ignore_changes = [metadata[0].annotations]
-  }
+  # 기존 aws-auth를 덮어쓰기
+  force = true
 }
