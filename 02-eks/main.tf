@@ -1,6 +1,6 @@
 # EKS 클러스터 IAM 역할
 resource "aws_iam_role" "eks_cluster_role" {
-  name = "${var.cluster_name}-cluster-role"
+  name = "${var.cluster_name}-cluster-role-seoul"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -16,7 +16,7 @@ resource "aws_iam_role" "eks_cluster_role" {
   })
 
   tags = {
-    Name    = "${var.cluster_name}-cluster-role"
+    Name    = "${var.cluster_name}-cluster-role-seoul"
     Project = var.project_name
   }
 }
@@ -34,28 +34,28 @@ resource "aws_eks_cluster" "kubox_cluster" {
   version  = var.cluster_version
 
   vpc_config {
-    subnet_ids              = concat(data.aws_subnets.private_subnets.ids, data.aws_subnets.public_subnets.ids)
+    subnet_ids              = data.aws_subnets.private_subnets.ids  # Private 서브넷만 사용
     # security_group_ids 제거 - AWS 자동 생성 보안그룹 사용
     endpoint_private_access = true
     endpoint_public_access  = true
   }
 
-  # 로그 활성화 (선택사항)
-  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+  # # 로그 활성화 (선택사항)
+  # enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_cluster_policy,
-  ]
+  # depends_on = [
+  #   aws_iam_role_policy_attachment.eks_cluster_policy,
+  # ]
 
-  tags = {
-    Name    = var.cluster_name
-    Project = var.project_name
-  }
+  # tags = {
+  #   Name    = var.cluster_name
+  #   Project = var.project_name
+  # }
 }
 
 # EKS 노드 그룹 IAM 역할
 resource "aws_iam_role" "eks_node_role" {
-  name = "${var.cluster_name}-node-role"
+  name = "${var.cluster_name}-node-role-seoul"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -71,7 +71,7 @@ resource "aws_iam_role" "eks_node_role" {
   })
 
   tags = {
-    Name    = "${var.cluster_name}-node-role"
+    Name    = "${var.cluster_name}-node-role-seoul"
     Project = var.project_name
   }
 }
@@ -89,6 +89,11 @@ resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
 
 resource "aws_iam_role_policy_attachment" "eks_container_registry_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.eks_node_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "eks_ebs_csi_driver_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
   role       = aws_iam_role.eks_node_role.name
 }
 
@@ -120,7 +125,7 @@ resource "aws_eks_node_group" "kubox_node_group" {
 
   # SSH 접근을 위한 키 설정
   remote_access {
-    ec2_ssh_key = "kubox"
+    ec2_ssh_key = "kubox_s"
   }
 
   # 의존성 설정
@@ -128,6 +133,7 @@ resource "aws_eks_node_group" "kubox_node_group" {
     aws_iam_role_policy_attachment.eks_worker_node_policy,
     aws_iam_role_policy_attachment.eks_cni_policy,
     aws_iam_role_policy_attachment.eks_container_registry_policy,
+    aws_iam_role_policy_attachment.eks_ebs_csi_driver_policy,
   ]
 
   tags = {

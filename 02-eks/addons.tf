@@ -1,3 +1,27 @@
+
+# ===========================================
+# EBS CSI Driver Add-on
+# ===========================================
+
+# EKS Add-on: EBS CSI Driver
+resource "aws_eks_addon" "ebs_csi_driver" {
+  cluster_name = aws_eks_cluster.kubox_cluster.name
+  addon_name   = "aws-ebs-csi-driver"
+  
+  # 최신 버전 자동 선택
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+  
+  depends_on = [
+    aws_eks_node_group.kubox_node_group
+  ]
+  
+  tags = {
+    Name    = "${var.cluster_name}-ebs-csi-driver"
+    Project = var.project_name
+  }
+}
+
 # ===========================================
 # AWS Load Balancer Controller 설치
 # ===========================================
