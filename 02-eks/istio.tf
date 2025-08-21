@@ -54,19 +54,20 @@ resource "helm_release" "istio_ingressgateway" {
   namespace  = "istio-system"
   version    = "1.19.3"
 
-  # 서브넷 설정을 values로 처리
-  values = [
-    yamlencode({
-      service = {
-        type = "LoadBalancer"
-        annotations = {
-          "service.beta.kubernetes.io/aws-load-balancer-type" = "nlb"
-          "service.beta.kubernetes.io/aws-load-balancer-scheme" = "internal"
-          "service.beta.kubernetes.io/aws-load-balancer-subnets" = join(",", data.aws_subnets.private_subnets.ids)
-        }
-      }
-    })
-  ]
+  set {
+    name  = "service.type"
+    value = "LoadBalancer"
+  }
+
+  set {
+    name  = "service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-type"
+    value = "nlb"
+  }
+
+  set {
+    name  = "service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-scheme"
+    value = "internet-facing"
+  }
 
   depends_on = [
     helm_release.istiod,
