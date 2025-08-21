@@ -18,7 +18,7 @@ resource "aws_vpc" "kubox_vpc" {
 resource "aws_subnet" "public_subnet_a" {
   vpc_id                  = aws_vpc.kubox_vpc.id
   cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-2a"
+  availability_zone       = "ap-northeast-2a"
   map_public_ip_on_launch = true
   
   tags = {
@@ -32,7 +32,7 @@ resource "aws_subnet" "public_subnet_a" {
 resource "aws_subnet" "public_subnet_c" {
   vpc_id                  = aws_vpc.kubox_vpc.id
   cidr_block              = "10.0.2.0/24"
-  availability_zone       = "us-east-2c"
+  availability_zone       = "ap-northeast-2c"
   map_public_ip_on_launch = true
   
   tags = {
@@ -45,7 +45,7 @@ resource "aws_subnet" "public_subnet_c" {
 resource "aws_subnet" "private_subnet_a" {
   vpc_id            = aws_vpc.kubox_vpc.id
   cidr_block        = "10.0.11.0/24"
-  availability_zone = "us-east-2a"
+  availability_zone = "ap-northeast-2a"
   
   tags = {
     Name = "private-subnet-a"
@@ -58,7 +58,7 @@ resource "aws_subnet" "private_subnet_a" {
 resource "aws_subnet" "private_subnet_c" {
   vpc_id            = aws_vpc.kubox_vpc.id
   cidr_block        = "10.0.12.0/24"
-  availability_zone = "us-east-2c"
+  availability_zone = "ap-northeast-2c"
   
   tags = {
     Name = "private-subnet-c"
@@ -67,11 +67,11 @@ resource "aws_subnet" "private_subnet_c" {
   }
 }
 
-# RDS Subnet A (us-east-2a) - RDS Primary
+# RDS Subnet A (ap-northeast-2a) - RDS Primary
 resource "aws_subnet" "rds_subnet_a" {
   vpc_id            = aws_vpc.kubox_vpc.id
   cidr_block        = "10.0.21.0/24"
-  availability_zone = "us-east-2a"
+  availability_zone = "ap-northeast-2a"
   
   tags = {
     Name = "rds-subnet-a"
@@ -79,11 +79,11 @@ resource "aws_subnet" "rds_subnet_a" {
   }
 }
 
-# RDS Subnet C (us-east-2c) - RDS Secondary
+# RDS Subnet C (ap-northeast-2c) - RDS Secondary
 resource "aws_subnet" "rds_subnet_c" {
   vpc_id            = aws_vpc.kubox_vpc.id
   cidr_block        = "10.0.22.0/24"
-  availability_zone = "us-east-2c"
+  availability_zone = "ap-northeast-2c"
   
   tags = {
     Name = "rds-subnet-c"
@@ -91,11 +91,11 @@ resource "aws_subnet" "rds_subnet_c" {
   }
 }
 
-# ElastiCache Subnet A (us-east-2a)
+# ElastiCache Subnet A (ap-northeast-2a)
 resource "aws_subnet" "elasticache_subnet_a" {
   vpc_id            = aws_vpc.kubox_vpc.id
   cidr_block        = "10.0.31.0/24"
-  availability_zone = "us-east-2a"
+  availability_zone = "ap-northeast-2a"
   
   tags = {
     Name = "elasticache-subnet-a"
@@ -103,11 +103,11 @@ resource "aws_subnet" "elasticache_subnet_a" {
   }
 }
 
-# ElastiCache Subnet C (us-east-2c)
+# ElastiCache Subnet C (ap-northeast-2c)
 resource "aws_subnet" "elasticache_subnet_c" {
   vpc_id            = aws_vpc.kubox_vpc.id
   cidr_block        = "10.0.32.0/24"
-  availability_zone = "us-east-2c"
+  availability_zone = "ap-northeast-2c"
   
   tags = {
     Name = "elasticache-subnet-c"

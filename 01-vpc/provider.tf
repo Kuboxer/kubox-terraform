@@ -9,5 +9,5 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-2"  # 오하이오 리전에서 작업
+  region = "ap-northeast-2"  # 서울 리전에서 작업
 }

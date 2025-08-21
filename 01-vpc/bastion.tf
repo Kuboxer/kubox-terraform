@@ -33,7 +33,7 @@ resource "aws_security_group" "bastion_sg" {
 resource "aws_instance" "bastion" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro"
-  key_name      = "kubox"  # SSH 키페어 추가
+  key_name      = "kubox_s"  # SSH 키페어 추가
   
   # 스팟 인스턴스 설정
   instance_market_options {

@@ -2,7 +2,7 @@
 variable "region" {
   description = "AWS region (can be modified when team account is confirmed)"
   type        = string
-  default     = "us-east-2"
+  default     = "ap-northeast-2"
 }
 
 # 프로젝트 이름
@@ -23,7 +23,7 @@ variable "vpc_cidr" {
 variable "azs" {
   description = "List of availability zones to use (using 2 AZs for cost optimization instead of 3)"
   type        = list(string)
-  default     = ["us-east-2a", "us-east-2c"]
+  default     = ["ap-northeast-2a", "ap-northeast-2c"]
 }
 
 # 서브넷 CIDR 설정
