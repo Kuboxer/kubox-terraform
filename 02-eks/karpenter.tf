@@ -6,7 +6,7 @@
 
 # Karpenter Node IAM Role
 resource "aws_iam_role" "karpenter_node" {
-  name = "KarpenterNodeRole-${var.cluster_name}"
+  name = "KarpenterNodeRole-${var.cluster_name}-${var.region}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -22,7 +22,7 @@ resource "aws_iam_role" "karpenter_node" {
   })
 
   tags = {
-    Name    = "KarpenterNodeRole-${var.cluster_name}"
+    Name    = "KarpenterNodeRole-${var.cluster_name}-${var.region}"
     Project = var.project_name
   }
 }
@@ -42,18 +42,18 @@ resource "aws_iam_role_policy_attachment" "karpenter_node_policy" {
 
 # Karpenter Node Instance Profile
 resource "aws_iam_instance_profile" "karpenter_node" {
-  name = "KarpenterNodeInstanceProfile-${var.cluster_name}"
+  name = "KarpenterNodeInstanceProfile-${var.cluster_name}-${var.region}"
   role = aws_iam_role.karpenter_node.name
 
   tags = {
-    Name    = "KarpenterNodeInstanceProfile-${var.cluster_name}"
+    Name    = "KarpenterNodeInstanceProfile-${var.cluster_name}-${var.region}"
     Project = var.project_name
   }
 }
 
 # Karpenter Controller IAM Role
 resource "aws_iam_role" "karpenter_controller" {
-  name = "KarpenterControllerRole-${var.cluster_name}"
+  name = "KarpenterControllerRole-${var.cluster_name}-${var.region}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -75,7 +75,7 @@ resource "aws_iam_role" "karpenter_controller" {
   })
 
   tags = {
-    Name    = "KarpenterControllerRole-${var.cluster_name}"
+    Name    = "KarpenterControllerRole-${var.cluster_name}-${var.region}"
     Project = var.project_name
   }
 }
@@ -189,7 +189,7 @@ resource "aws_cloudwatch_event_target" "karpenter_rebalance" {
   arn       = aws_sqs_queue.karpenter.arn
 }
 resource "aws_iam_policy" "karpenter_controller" {
-  name = "KarpenterControllerPolicy-${var.cluster_name}"
+  name = "KarpenterControllerPolicy-${var.cluster_name}-${var.region}"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -312,7 +312,7 @@ resource "aws_iam_policy" "karpenter_controller" {
   })
 
   tags = {
-    Name    = "KarpenterControllerPolicy-${var.cluster_name}"
+    Name    = "KarpenterControllerPolicy-${var.cluster_name}-${var.region}"
     Project = var.project_name
   }
 }

@@ -1,6 +1,6 @@
 # IAM Policy for Secrets Manager Access
 resource "aws_iam_policy" "kubox_secrets_manager_policy" {
-  name        = "KuboxSecretsManagerPolicy"
+  name        = "KuboxSecretsManagerPolicy-${var.region}"
   description = "Policy for accessing Kubox secrets in AWS Secrets Manager"
 
   policy = jsonencode({
@@ -22,7 +22,7 @@ resource "aws_iam_policy" "kubox_secrets_manager_policy" {
 
 # IAM Role for Service Account
 resource "aws_iam_role" "kubox_secrets_sa_role" {
-  name = "KuboxSecretsServiceAccountRole"
+  name = "KuboxSecretsServiceAccountRole-${var.region}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

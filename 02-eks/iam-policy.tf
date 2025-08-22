@@ -1,6 +1,6 @@
 # AWS Load Balancer Controller IAM Policy
 resource "aws_iam_policy" "aws_load_balancer_controller" {
-  name        = "kubox-cluster-aws-load-balancer-controller"
+  name        = "${var.cluster_name}-aws-load-balancer-controller-${var.region}"
   description = "IAM policy for AWS Load Balancer Controller"
   
   policy = jsonencode({

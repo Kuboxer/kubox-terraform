@@ -51,6 +51,37 @@ output "cluster_security_group_id" {
   value       = aws_eks_cluster.kubox_cluster.vpc_config[0].cluster_security_group_id
 }
 
+# VPC 정보 추가
+output "vpc_id" {
+  description = "VPC ID"
+  value       = data.aws_vpc.kubox_vpc.id
+}
+
+output "vpc_cidr_block" {
+  description = "VPC CIDR block"
+  value       = data.aws_vpc.kubox_vpc.cidr_block
+}
+
+output "private_subnet_ids" {
+  description = "Private subnet IDs"
+  value       = data.aws_subnets.private_subnets.ids
+}
+
+# Istio Gateway 정보
+data "kubernetes_service" "istio_gateway" {
+  metadata {
+    name      = "istio-ingressgateway"
+    namespace = "istio-system"
+  }
+  
+  depends_on = [helm_release.istio_ingressgateway]
+}
+
+output "istio_gateway_hostname" {
+  description = "Istio IngressGateway LoadBalancer hostname"
+  value       = try(data.kubernetes_service.istio_gateway.status[0].load_balancer[0].ingress[0].hostname, "")
+}
+
 # kubectl 설정 명령어
 output "kubectl_config_command" {
   description = "kubectl configuration command"

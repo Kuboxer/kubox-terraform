@@ -17,7 +17,7 @@ resource "aws_iam_openid_connect_provider" "eks_oidc" {
 
 # AWS Load Balancer Controller용 IRSA 역할
 resource "aws_iam_role" "aws_load_balancer_controller_irsa" {
-  name = "${var.cluster_name}-aws-load-balancer-controller"
+  name = "${var.cluster_name}-aws-load-balancer-controller-${var.region}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -39,7 +39,7 @@ resource "aws_iam_role" "aws_load_balancer_controller_irsa" {
   })
 
   tags = {
-    Name    = "${var.cluster_name}-aws-load-balancer-controller-irsa"
+    Name    = "${var.cluster_name}-aws-load-balancer-controller-irsa-${var.region}"
     Project = var.project_name
   }
 }
@@ -57,7 +57,7 @@ resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller_custom" 
 
 # External DNS용 IRSA 역할 (향후 사용)
 resource "aws_iam_role" "external_dns_irsa" {
-  name = "${var.cluster_name}-external-dns"
+  name = "${var.cluster_name}-external-dns-${var.region}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -79,14 +79,14 @@ resource "aws_iam_role" "external_dns_irsa" {
   })
 
   tags = {
-    Name    = "${var.cluster_name}-external-dns-irsa"
+    Name    = "${var.cluster_name}-external-dns-irsa-${var.region}"
     Project = var.project_name
   }
 }
 
 # External DNS 정책
 resource "aws_iam_policy" "external_dns" {
-  name = "${var.cluster_name}-external-dns"
+  name = "${var.cluster_name}-external-dns-${var.region}"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -104,7 +104,7 @@ resource "aws_iam_policy" "external_dns" {
   })
 
   tags = {
-    Name    = "${var.cluster_name}-external-dns-policy"
+    Name    = "${var.cluster_name}-external-dns-policy-${var.region}"
     Project = var.project_name
   }
 }
@@ -116,7 +116,7 @@ resource "aws_iam_role_policy_attachment" "external_dns_irsa" {
 
 # S3용 IRSA 역할
 resource "aws_iam_role" "s3_access_irsa" {
-  name = "${var.cluster_name}-s3-access"
+  name = "${var.cluster_name}-s3-access-${var.region}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -140,7 +140,7 @@ resource "aws_iam_role" "s3_access_irsa" {
   })
 
   tags = {
-    Name    = "${var.cluster_name}-s3-access-irsa"
+    Name    = "${var.cluster_name}-s3-access-irsa-${var.region}"
     Project = var.project_name
   }
 }

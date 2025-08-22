@@ -1,6 +1,6 @@
 # EKS 클러스터 IAM 역할
 resource "aws_iam_role" "eks_cluster_role" {
-  name = "${var.cluster_name}-cluster-role-seoul"
+  name = "${var.cluster_name}-cluster-role-${var.region}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -16,7 +16,7 @@ resource "aws_iam_role" "eks_cluster_role" {
   })
 
   tags = {
-    Name    = "${var.cluster_name}-cluster-role-seoul"
+    Name    = "${var.cluster_name}-cluster-role-${var.region}"
     Project = var.project_name
   }
 }
@@ -55,7 +55,7 @@ resource "aws_eks_cluster" "kubox_cluster" {
 
 # EKS 노드 그룹 IAM 역할
 resource "aws_iam_role" "eks_node_role" {
-  name = "${var.cluster_name}-node-role-seoul"
+  name = "${var.cluster_name}-node-role-${var.region}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -71,7 +71,7 @@ resource "aws_iam_role" "eks_node_role" {
   })
 
   tags = {
-    Name    = "${var.cluster_name}-node-role-seoul"
+    Name    = "${var.cluster_name}-node-role-${var.region}"
     Project = var.project_name
   }
 }

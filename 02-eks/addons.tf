@@ -3,17 +3,54 @@
 # EBS CSI Driver Add-on
 # ===========================================
 
+# EBS CSI Driver용 IRSA 역할 생성
+resource "aws_iam_role" "ebs_csi_driver_irsa" {
+  name = "${var.cluster_name}-ebs-csi-driver-${var.region}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks_oidc.arn
+        }
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name    = "${var.cluster_name}-ebs-csi-driver-irsa-${var.region}"
+    Project = var.project_name
+  }
+}
+
+# EBS CSI Driver 정책 연결
+resource "aws_iam_role_policy_attachment" "ebs_csi_driver_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+  role       = aws_iam_role.ebs_csi_driver_irsa.name
+}
+
 # EKS Add-on: EBS CSI Driver
 resource "aws_eks_addon" "ebs_csi_driver" {
-  cluster_name = aws_eks_cluster.kubox_cluster.name
-  addon_name   = "aws-ebs-csi-driver"
+  cluster_name             = aws_eks_cluster.kubox_cluster.name
+  addon_name               = "aws-ebs-csi-driver"
+  service_account_role_arn = aws_iam_role.ebs_csi_driver_irsa.arn
   
   # 최신 버전 자동 선택
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "OVERWRITE"
   
   depends_on = [
-    aws_eks_node_group.kubox_node_group
+    aws_eks_node_group.kubox_node_group,
+    aws_iam_role_policy_attachment.ebs_csi_driver_policy
   ]
   
   tags = {

@@ -14,16 +14,16 @@ terraform {
 
 # AWS Provider
 provider "aws" {
-  region = "us-east-2"
+  region = "ap-northeast-2"  # Seoul region
 }
 
 # EKS 클러스터 정보 가져오기
 data "aws_eks_cluster" "kubox" {
-  name = "kubox-cluster"
+  name = local.cluster_name
 }
 
 data "aws_eks_cluster_auth" "kubox" {
-  name = "kubox-cluster"
+  name = local.cluster_name
 }
 
 # Kubernetes Provider
@@ -33,12 +33,26 @@ provider "kubernetes" {
   token                  = data.aws_eks_cluster_auth.kubox.token
 }
 
-# Data sources
-data "aws_vpc" "kubox" {
-  filter {
-    name   = "tag:Name"
-    values = ["kubox-vpc"]
+# Data sources - Terraform state에서 가져오기
+data "terraform_remote_state" "eks" {
+  backend = "local"
+  config = {
+    path = "../02-eks/terraform.tfstate"
   }
+}
+
+# 대안: 직접 데이터 소스 사용
+# data "aws_vpc" "kubox" {
+#   filter {
+#     name   = "tag:Name"
+#     values = ["kubox-vpc"]
+#   }
+# }
+
+# locals로 VPC ID 정의
+locals {
+  vpc_id = data.terraform_remote_state.eks.outputs.vpc_id
+  cluster_name = data.terraform_remote_state.eks.outputs.cluster_name
 }
 
 # Istio Gateway 외부 IP 가져오기
