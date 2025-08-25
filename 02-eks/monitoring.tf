@@ -81,9 +81,9 @@
 #         }
 #       }
       
-#       # Node Exporter 비활성화 (리소스 절약)
+#       # Node Exporter
 #       nodeExporter = {
-#         enabled = false
+#         enabled = true
 #       }
       
 #       # Kube State Metrics 최적화
@@ -144,87 +144,87 @@
 # }
 
 # # ===========================================
-# # 옵션: 나중에 추가할 모니터링 도구들 (주석 처리)
+# # 추가적인 모니터링 도구들
 # # ===========================================
 
-# # # Thanos (장기 저장용 - 나중에 필요시 활성화)
-# # resource "helm_release" "thanos" {
-# #   name             = "thanos"
-# #   repository       = "https://charts.bitnami.com/bitnami"
-# #   chart            = "thanos"
-# #   namespace        = "monitoring"
-# #   
-# #   values = [
-# #     yamlencode({
-# #       query = {
-# #         enabled = true
-# #         resources = {
-# #           requests = { cpu = "50m", memory = "128Mi" }
-# #           limits = { cpu = "200m", memory = "256Mi" }
-# #         }
-# #       }
-# #       compactor = { enabled = false }
-# #       storegateway = { enabled = false }
-# #       ruler = { enabled = false }
-# #     })
-# #   ]
-# #
-# #   depends_on = [kubernetes_namespace.monitoring]
-# # }
+# # Thanos (장기 저장용)
+# resource "helm_release" "thanos" {
+#   name             = "thanos"
+#   repository       = "https://charts.bitnami.com/bitnami"
+#   chart            = "thanos"
+#   namespace        = "monitoring"
+  
+#   values = [
+#     yamlencode({
+#       query = {
+#         enabled = true
+#         resources = {
+#           requests = { cpu = "50m", memory = "128Mi" }
+#           limits = { cpu = "200m", memory = "256Mi" }
+#         }
+#       }
+#       compactor = { enabled = false }
+#       storegateway = { enabled = false }
+#       ruler = { enabled = false }
+#     })
+#   ]
 
-# # # Loki Stack (로그 수집 - 나중에 필요시 활성화)
-# # resource "helm_release" "loki_stack" {
-# #   name             = "loki-stack"
-# #   repository       = "https://grafana.github.io/helm-charts"
-# #   chart            = "loki-stack"
-# #   namespace        = "monitoring"
-# #   
-# #   values = [
-# #     yamlencode({
-# #       loki = {
-# #         enabled = true
-# #         resources = {
-# #           requests = { cpu = "50m", memory = "128Mi" }
-# #           limits = { cpu = "200m", memory = "256Mi" }
-# #         }
-# #       }
-# #       promtail = {
-# #         enabled = true
-# #         resources = {
-# #           requests = { cpu = "10m", memory = "64Mi" }
-# #           limits = { cpu = "50m", memory = "128Mi" }
-# #         }
-# #       }
-# #       fluent-bit = { enabled = false }
-# #       grafana = { enabled = false }  # 위에서 이미 설치
-# #       prometheus = { enabled = false }  # 위에서 이미 설치
-# #     })
-# #   ]
-# #
-# #   depends_on = [kubernetes_namespace.monitoring]
-# # }
+#   depends_on = [kubernetes_namespace.monitoring]
+# }
 
-# # # Jaeger (분산 추적 - 나중에 필요시 활성화)
-# # resource "helm_release" "jaeger" {
-# #   name             = "jaeger"
-# #   repository       = "https://jaegertracing.github.io/helm-charts"
-# #   chart            = "jaeger"
-# #   namespace        = "monitoring"
-# #
-# #   values = [
-# #     yamlencode({
-# #       allInOne = {
-# #         enabled = true
-# #         resources = {
-# #           requests = { cpu = "50m", memory = "128Mi" }
-# #           limits = { cpu = "200m", memory = "256Mi" }
-# #         }
-# #       }
-# #       agent = { enabled = false }
-# #       collector = { enabled = false }
-# #       query = { enabled = false }
-# #     })
-# #   ]
-# #
-# #   depends_on = [helm_release.istiod]
-# # }
+# # Loki Stack (로그 수집)
+# resource "helm_release" "loki_stack" {
+#   name             = "loki-stack"
+#   repository       = "https://grafana.github.io/helm-charts"
+#   chart            = "loki-stack"
+#   namespace        = "monitoring"
+  
+#   values = [
+#     yamlencode({
+#       loki = {
+#         enabled = true
+#         resources = {
+#           requests = { cpu = "50m", memory = "128Mi" }
+#           limits = { cpu = "200m", memory = "256Mi" }
+#         }
+#       }
+#       promtail = {
+#         enabled = true
+#         resources = {
+#           requests = { cpu = "10m", memory = "64Mi" }
+#           limits = { cpu = "50m", memory = "128Mi" }
+#         }
+#       }
+#       fluent-bit = { enabled = false }
+#       grafana = { enabled = false }  # 위에서 이미 설치
+#       prometheus = { enabled = false }  # 위에서 이미 설치
+#     })
+#   ]
+
+#   depends_on = [kubernetes_namespace.monitoring]
+# }
+
+# # Jaeger (분산 추적 - 나중에 필요시 활성화)
+# resource "helm_release" "jaeger" {
+#   name             = "jaeger"
+#   repository       = "https://jaegertracing.github.io/helm-charts"
+#   chart            = "jaeger"
+#   namespace        = "monitoring"
+
+#   values = [
+#     yamlencode({
+#       allInOne = {
+#         enabled = true
+#         resources = {
+#           requests = { cpu = "50m", memory = "128Mi" }
+#           limits = { cpu = "200m", memory = "256Mi" }
+#         }
+#       }
+#       agent = { enabled = false }
+#       collector = { enabled = false }
+#       query = { enabled = false }
+#     })
+#   ]
+
+#   depends_on = [helm_release.istiod]
+# }
