@@ -1,10 +1,64 @@
 # ===========================================
-# EKS 보안그룹 설정
+# 현재 운영중인 EKS 보안그룹 참조
 # ===========================================
+data "aws_security_group" "existing_eks_cluster_sg" {
+  id = "sg-080b2493d81514e46"  # 현재 사용중인 EKS 클러스터 보안그룹
+}
 
-# 참고: 
-# - EKS는 자동으로 클러스터 보안그룹을 생성합니다 (eks-cluster-sg-{cluster-name}-{random-id})
-# - 이 보안그룹에는 워커노드와 컨트롤플레인 간 필요한 통신 규칙이 자동으로 포함됩니다
-# - 추가 보안그룹이 필요한 경우에만 아래에 정의합니다
+# ===========================================
+# RDS 보안그룹 - MySQL/Aurora(3306) 포트만 허용
+# ===========================================
+resource "aws_security_group" "kubox_rds_sg" {
+  name        = "kubox-rds-sg"
+  description = "Security group for RDS database"
+  vpc_id      = data.aws_vpc.kubox_vpc.id
 
-# 현재는 AWS 기본 보안그룹만 사용하므로 추가 보안그룹 없음
+  ingress {
+    description     = "MySQL/Aurora access from EKS cluster nodes"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [data.aws_security_group.existing_eks_cluster_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "kubox-rds-sg"
+    Description = "RDS security group - MySQL access only from EKS cluster"
+  }
+}
+
+# ===========================================
+# ElastiCache 보안그룹 - Redis(6379) 포트만 허용
+# ===========================================
+resource "aws_security_group" "kubox_elasticache_sg" {
+  name        = "kubox-elasticache-sg"
+  description = "Security group for ElastiCache Redis"
+  vpc_id      = data.aws_vpc.kubox_vpc.id
+
+  ingress {
+    description     = "Redis access from EKS cluster nodes"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [data.aws_security_group.existing_eks_cluster_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "kubox-elasticache-sg"
+    Description = "ElastiCache security group - Redis access only from EKS cluster"
+  }
+}
