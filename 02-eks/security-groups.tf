@@ -2,7 +2,17 @@
 # 현재 운영중인 EKS 보안그룹 참조
 # ===========================================
 data "aws_security_group" "existing_eks_cluster_sg" {
-  id = "sg-080b2493d81514e46"  # 현재 사용중인 EKS 클러스터 보안그룹
+  filter {
+    name   = "group-name"
+    values = ["eks-cluster-sg-kubox-cluster-*"]
+  }
+  
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.kubox_vpc.id]
+  }
+  
+  depends_on = [aws_eks_cluster.kubox_cluster]
 }
 
 # ===========================================
