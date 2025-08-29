@@ -115,7 +115,7 @@ resource "helm_release" "aws_load_balancer_controller" {
   # 리소스 최적화
   set {
     name  = "resources.requests.cpu"
-    value = "50m"
+    value = "30m"
   }
 
   set {
@@ -125,7 +125,7 @@ resource "helm_release" "aws_load_balancer_controller" {
 
   set {
     name  = "resources.limits.cpu"
-    value = "200m"
+    value = "100m"
   }
 
   set {
@@ -169,6 +169,22 @@ resource "helm_release" "metrics_server" {
     name  = "args"
     value = "{--kubelet-insecure-tls}"
   }
+
+  # 리소스 최적화
+  values = [
+    yamlencode({
+      resources = {
+        requests = {
+          cpu    = "50m"
+          memory = "128Mi"
+        }
+        limits = {
+          cpu    = "200m"
+          memory = "256Mi"
+        }
+      }
+    })
+  ]
 }
 
 # S3 액세스용 Service Account

@@ -405,7 +405,7 @@ resource "helm_release" "karpenter" {
 
   set {
     name  = "controller.resources.requests.cpu"
-    value = "100m"  # 1에서 100m로 줄이기
+    value = "30m"  # 1에서 100m로 줄이기
   }
 
   set {
@@ -415,7 +415,7 @@ resource "helm_release" "karpenter" {
 
   set {
     name  = "controller.resources.limits.cpu"
-    value = "500m"  # 1에서 500m로 줄이기
+    value = "200m"  # 1에서 500m로 줄이기
   }
 
   set {

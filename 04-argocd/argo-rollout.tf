@@ -29,7 +29,7 @@ resource "helm_release" "argo_rollouts" {
   # 리소스 최적화
   set {
     name  = "controller.resources.requests.cpu"
-    value = "50m"
+    value = "25m"
   }
 
   set {
