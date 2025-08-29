@@ -17,6 +17,7 @@ echo ""
 
 echo "3. EKS 리소스 배포..."
 cd /Users/choiyunha/kubox-eks
+chmod +x deploy-infra.sh
 ./deploy-infra.sh
 echo ""
 
