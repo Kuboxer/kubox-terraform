@@ -36,3 +36,6 @@ data "aws_subnets" "public_subnets" {
 data "aws_eks_cluster_auth" "cluster_auth" {
   name = aws_eks_cluster.kubox_cluster.name
 }
+
+# AWS 계정 정보 가져오기
+data "aws_caller_identity" "current" {}

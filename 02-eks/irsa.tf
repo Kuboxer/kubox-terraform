@@ -178,3 +178,38 @@ resource "aws_iam_role_policy_attachment" "s3_access_irsa" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
   role       = aws_iam_role.s3_access_irsa.name
 }
+
+# AWS Loki-S3 업로드용 IRSA 역할
+resource "aws_iam_role" "s3_monitoring_loki_access_irsa" {
+  name = "${var.cluster_name}-s3-monitoring-loki-access-${var.region}"
+  
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks_oidc.arn
+        }
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:sub" = "system:serviceaccount:monitoring:loki"
+            "${replace(aws_iam_openid_connect_provider.eks_oidc.url, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+  
+  tags = {
+    Name    = "${var.cluster_name}-s3-monitoring-loki-access-irsa-${var.region}"
+    Project = var.project_name
+  }
+}
+
+# AWS Loki-S3 업로드용 정책 연결
+resource "aws_iam_role_policy_attachment" "s3_monitoring_loki_access" {
+  policy_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/kubox-monitoring-loki-S3"
+  role       = aws_iam_role.s3_monitoring_loki_access_irsa.name
+}
