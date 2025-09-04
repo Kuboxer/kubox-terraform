@@ -15,22 +15,22 @@ terraform init
 terraform apply -auto-approve
 echo ""
 
-echo "3. EKS 리소스 배포..."
-cd /Users/choiyunha/kubox-eks
-chmod +x deploy-infra.sh
-./deploy-infra.sh
-echo ""
-
-echo "4. API Gateway 생성..."
+echo "3. API Gateway 생성..."
 cd /Users/choiyunha/kubox-terraform/03-api-gateway
 terraform init
 terraform apply -auto-approve
 echo ""
 
-echo "5. ArgoCD 생성..."
+echo "4. ArgoCD 생성..."
 cd /Users/choiyunha/kubox-terraform/04-argocd
 terraform init
 terraform apply -auto-approve
+echo ""
+
+echo "5. EKS 리소스 배포..."
+cd /Users/choiyunha/kubox-eks
+chmod +x deploy-infra.sh
+./deploy-infra.sh
 echo ""
 
 echo "🎉 Kubox 전체 시스템이 완전 자동화로 배포되었습니다!"

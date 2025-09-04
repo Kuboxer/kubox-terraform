@@ -167,3 +167,30 @@ output "elasticache_security_group_id" {
   value       = aws_security_group.kubox_elasticache_sg.id
   description = "ID of the ElastiCache security group"
 }
+
+# ElastiCache 클러스터 정보
+output "elasticache_cluster_id" {
+  value       = aws_elasticache_replication_group.kubox_redis.id
+  description = "ID of the ElastiCache Redis cluster"
+}
+
+output "elasticache_primary_endpoint" {
+  value       = aws_elasticache_replication_group.kubox_redis.primary_endpoint_address
+  description = "Primary endpoint of the ElastiCache Redis cluster"
+}
+
+output "elasticache_configuration_endpoint" {
+  value       = aws_elasticache_replication_group.kubox_redis.configuration_endpoint_address
+  description = "Configuration endpoint of the ElastiCache Redis cluster"
+}
+
+# Route53 정보
+output "route53_zone_id" {
+  value       = data.aws_route53_zone.kubox_private.zone_id
+  description = "Route53 private hosted zone ID"
+}
+
+output "redis_domain" {
+  value       = "redis.kubox.local"
+  description = "Redis domain name for application connection"
+}
