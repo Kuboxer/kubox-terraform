@@ -4,7 +4,14 @@
 data "aws_route53_zone" "kubox_private" {
   name         = "kubox.local"
   private_zone = true
-  vpc_id       = data.aws_vpc.kubox_vpc.id
+}
+
+# ===========================================
+# 기존 호스팅 존에 새로운 VPC 연결
+# ===========================================
+resource "aws_route53_zone_association" "kubox_private_vpc" {
+  zone_id = data.aws_route53_zone.kubox_private.zone_id
+  vpc_id  = data.aws_vpc.kubox_vpc.id
 }
 
 # ===========================================
@@ -17,7 +24,10 @@ resource "aws_route53_record" "redis" {
   ttl     = 300
   records = [aws_elasticache_replication_group.kubox_redis.primary_endpoint_address]
   
-  depends_on = [aws_elasticache_replication_group.kubox_redis]
+  depends_on = [
+    aws_elasticache_replication_group.kubox_redis,
+    aws_route53_zone_association.kubox_private_vpc
+  ]
 }
 
 # ===========================================

@@ -16,6 +16,16 @@ data "aws_security_group" "existing_eks_cluster_sg" {
 }
 
 # ===========================================
+# Bastion 보안그룹 참조
+# ===========================================
+data "aws_security_group" "bastion_sg" {
+  filter {
+    name   = "tag:Name"
+    values = ["kubox-bastion-sg"]
+  }
+}
+
+# ===========================================
 # RDS 보안그룹 - MySQL/Aurora(3306) 포트만 허용
 # ===========================================
 resource "aws_security_group" "kubox_rds_sg" {
@@ -29,6 +39,15 @@ resource "aws_security_group" "kubox_rds_sg" {
     to_port         = 3306
     protocol        = "tcp"
     security_groups = [data.aws_security_group.existing_eks_cluster_sg.id]
+  }
+
+  # Bastion에서 RDS 접근 허용
+  ingress {
+    description     = "MySQL/Aurora access from Bastion"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [data.aws_security_group.bastion_sg.id]
   }
 
   egress {
