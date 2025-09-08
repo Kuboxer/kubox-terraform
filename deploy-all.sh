@@ -4,31 +4,31 @@ echo "=== Kubox 인프라 완전 자동화 배포 ==="
 echo ""
 
 echo "1. VPC 생성..."
-cd /Users/choiyunha/kubox-terraform/01-vpc
+cd ./01-vpc
 terraform init
 terraform apply -auto-approve
 echo ""
 
 echo "2. EKS 클러스터 생성 (CSI Driver 포함)..."
-cd /Users/choiyunha/kubox-terraform/02-eks
+cd ../02-eks
 terraform init
 terraform apply -auto-approve
 echo ""
 
 echo "3. API Gateway 생성..."
-cd /Users/choiyunha/kubox-terraform/03-api-gateway
+cd ../03-api-gateway
 terraform init
 terraform apply -auto-approve
 echo ""
 
 echo "4. ArgoCD 생성..."
-cd /Users/choiyunha/kubox-terraform/04-argocd
+cd ../04-argocd
 terraform init
 terraform apply -auto-approve
 echo ""
 
 echo "5. EKS 리소스 배포..."
-cd /Users/choiyunha/kubox-eks
+cd ../../kubox-eks
 chmod +x deploy-infra.sh
 ./deploy-infra.sh
 echo ""
