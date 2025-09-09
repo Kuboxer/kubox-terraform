@@ -33,6 +33,12 @@ chmod +x deploy-infra.sh
 ./deploy-infra.sh
 echo ""
 
+echo "6. SonarQube 생성..."
+cd ../kubox-terraform/05-sonarqube
+terraform init
+terraform apply -auto-approve
+echo ""
+
 echo "🎉 Kubox 전체 시스템이 완전 자동화로 배포되었습니다!"
 echo ""
 echo "=== 최종 상태 ==="
