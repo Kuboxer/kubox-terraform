@@ -80,11 +80,11 @@ resource "helm_release" "sonarqube" {
       resources = {
         requests = {
           memory = "1Gi"
-          cpu    = "250m"
+          cpu    = "50m"
         }
         limits = {
           memory = "2Gi"
-          cpu    = "500m"
+          cpu    = "250m"
         }
       }
       

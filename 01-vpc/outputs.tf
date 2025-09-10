@@ -122,3 +122,14 @@ output "bastion_ssh_command" {
   description = "SSH command to connect to bastion host"
   value       = "ssh -i kubox.pem ec2-user@${aws_instance.bastion.public_ip}"
 }
+
+# 보안그룹 정보
+output "rds_security_group_id" {
+  description = "ID of RDS security group"
+  value       = aws_security_group.kubox_rds_sg.id
+}
+
+output "elasticache_security_group_id" {
+  description = "ID of ElastiCache security group"
+  value       = aws_security_group.kubox_elasticache_sg.id
+}

@@ -158,13 +158,13 @@ output "karpenter_info" {
 
 # RDS 보안그룹 ID 출력
 output "rds_security_group_id" {
-  value       = aws_security_group.kubox_rds_sg.id
+  value       = data.aws_security_group.kubox_rds_sg.id
   description = "ID of the RDS security group"
 }
 
 # ElastiCache 보안그룹 ID 출력
 output "elasticache_security_group_id" {
-  value       = aws_security_group.kubox_elasticache_sg.id
+  value       = data.aws_security_group.kubox_elasticache_sg.id
   description = "ID of the ElastiCache security group"
 }
 

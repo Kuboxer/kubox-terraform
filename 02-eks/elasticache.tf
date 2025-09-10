@@ -30,7 +30,7 @@ resource "aws_elasticache_replication_group" "kubox_redis" {
   
   # 네트워크 설정
   subnet_group_name  = aws_elasticache_subnet_group.kubox_elasticache_subnet_group.name
-  security_group_ids = [aws_security_group.kubox_elasticache_sg.id]
+  security_group_ids = [data.aws_security_group.kubox_elasticache_sg.id]
   
   # 보안 설정
   at_rest_encryption_enabled = true
@@ -46,7 +46,7 @@ resource "aws_elasticache_replication_group" "kubox_redis" {
   }
 
   depends_on = [
-    aws_security_group.kubox_elasticache_sg,
+    data.aws_security_group.kubox_elasticache_sg,
     aws_elasticache_subnet_group.kubox_elasticache_subnet_group
   ]
 }
