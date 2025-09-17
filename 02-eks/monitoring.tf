@@ -1,230 +1,98 @@
-# # ===========================================
-# # 모니터링 네임스페이스 생성
-# # ===========================================
+# ===========================================
+# Route53 hosted zone 데이터
+# ===========================================
+data "aws_route53_zone" "kubox_public" {
+  name         = "kubox.shop."
+  private_zone = false
+}
 
-# resource "kubernetes_namespace" "monitoring" {
-#   metadata {
-#     name = "monitoring"
-#     labels = {
-#       "istio-injection" = "enabled"
-#     }
-#   }
+# ===========================================
+# NLB의 Canonical Hosted Zone ID 가져오기
+# ===========================================
+data "aws_lb" "istio_nlb" {
+  name = split("-", split(".", data.kubernetes_service.istio_gateway.status[0].load_balancer[0].ingress[0].hostname)[0])[0]
+}
 
-#   depends_on = [helm_release.istiod]
-# }
+# ===========================================
+# 모니터링 도구 Route53 레코드 수정 (NLB 별칭)
+# ===========================================
 
-# # ===========================================
-# # 간단한 Prometheus + Grafana 설치 (리소스 최적화)
-# # ===========================================
-
-# resource "helm_release" "kube_prometheus_stack" {
-#   name             = "kube-prometheus-stack"
-#   repository       = "https://prometheus-community.github.io/helm-charts"
-#   chart            = "kube-prometheus-stack"
-#   namespace        = "monitoring"
-#   version          = "61.3.0"
+# Alertmanager Route53 레코드
+resource "aws_route53_record" "alertmanager" {
+  zone_id = data.aws_route53_zone.kubox_public.zone_id
+  name    = "alertmanager.kubox.shop"
+  type    = "A"
+  allow_overwrite = true
   
-#   timeout = 900
-#   wait    = true
+  alias {
+    name                   = data.kubernetes_service.istio_gateway.status[0].load_balancer[0].ingress[0].hostname
+    zone_id                = data.aws_lb.istio_nlb.zone_id
+    evaluate_target_health = false
+  }
 
-#   # 리소스 최적화 설정
-#   values = [
-#     yamlencode({
-#       # Prometheus 최적화
-#       prometheus = {
-#         prometheusSpec = {
-#           resources = {
-#             requests = {
-#               cpu    = "100m"
-#               memory = "512Mi"
-#             }
-#             limits = {
-#               cpu    = "500m" 
-#               memory = "1Gi"
-#             }
-#           }
-#           retention = "7d"  # 7일만 보관
-#           retentionSize = "5GB"
-#         }
-#       }
-      
-#       # Grafana 최적화
-#       grafana = {
-#         resources = {
-#           requests = {
-#             cpu    = "50m"
-#             memory = "128Mi"
-#           }
-#           limits = {
-#             cpu    = "200m"
-#             memory = "256Mi"
-#           }
-#         }
-#         # 기본 대시보드 활성화
-#         defaultDashboardsEnabled = true
-#         adminPassword = "admin123"  # 변경 필요
-#       }
-      
-#       # AlertManager 최적화
-#       alertmanager = {
-#         alertmanagerSpec = {
-#           resources = {
-#             requests = {
-#               cpu    = "10m"
-#               memory = "64Mi"
-#             }
-#             limits = {
-#               cpu    = "100m"
-#               memory = "128Mi"
-#             }
-#           }
-#         }
-#       }
-      
-#       # Node Exporter
-#       nodeExporter = {
-#         enabled = true
-#       }
-      
-#       # Kube State Metrics 최적화
-#       kubeStateMetrics = {
-#         enabled = true
-#       }
-#     })
-#   ]
+  depends_on = [data.kubernetes_service.istio_gateway]
+}
 
-#   depends_on = [kubernetes_namespace.monitoring]
-# }
-
-# # ===========================================
-# # Istio 모니터링 도구 (경량화)
-# # ===========================================
-
-# # Kiali 설치 (Istio 서비스 메시 시각화)
-# resource "helm_release" "kiali" {
-#   name             = "kiali-server"
-#   repository       = "https://kiali.org/helm-charts"
-#   chart            = "kiali-server"
-#   namespace        = "monitoring"
-#   version          = "1.73.0"
-
-#   values = [
-#     yamlencode({
-#       auth = {
-#         strategy = "anonymous"
-#       }
-#       deployment = {
-#         resources = {
-#           requests = {
-#             cpu    = "10m"
-#             memory = "64Mi"
-#           }
-#           limits = {
-#             cpu    = "100m"
-#             memory = "128Mi"
-#           }
-#         }
-#       }
-#       external_services = {
-#         prometheus = {
-#           url = "http://kube-prometheus-stack-prometheus.monitoring:9090"
-#         }
-#         grafana = {
-#           in_cluster_url = "http://kube-prometheus-stack-grafana.monitoring:80"
-#           url = "http://kube-prometheus-stack-grafana.monitoring:80"
-#         }
-#       }
-#     })
-#   ]
-
-#   depends_on = [
-#     helm_release.istiod,
-#     helm_release.kube_prometheus_stack
-#   ]
-# }
-
-# # ===========================================
-# # 추가적인 모니터링 도구들
-# # ===========================================
-
-# # Thanos (장기 저장용)
-# resource "helm_release" "thanos" {
-#   name             = "thanos"
-#   repository       = "https://charts.bitnami.com/bitnami"
-#   chart            = "thanos"
-#   namespace        = "monitoring"
+# Grafana Route53 레코드
+resource "aws_route53_record" "grafana" {
+  zone_id = data.aws_route53_zone.kubox_public.zone_id
+  name    = "grafana.kubox.shop"
+  type    = "A"
+  allow_overwrite = true
   
-#   values = [
-#     yamlencode({
-#       query = {
-#         enabled = true
-#         resources = {
-#           requests = { cpu = "50m", memory = "128Mi" }
-#           limits = { cpu = "200m", memory = "256Mi" }
-#         }
-#       }
-#       compactor = { enabled = false }
-#       storegateway = { enabled = false }
-#       ruler = { enabled = false }
-#     })
-#   ]
+  alias {
+    name                   = data.kubernetes_service.istio_gateway.status[0].load_balancer[0].ingress[0].hostname
+    zone_id                = data.aws_lb.istio_nlb.zone_id
+    evaluate_target_health = false
+  }
 
-#   depends_on = [kubernetes_namespace.monitoring]
-# }
+  depends_on = [data.kubernetes_service.istio_gateway]
+}
 
-# # Loki Stack (로그 수집)
-# resource "helm_release" "loki_stack" {
-#   name             = "loki-stack"
-#   repository       = "https://grafana.github.io/helm-charts"
-#   chart            = "loki-stack"
-#   namespace        = "monitoring"
+# Jaeger Route53 레코드
+resource "aws_route53_record" "jaeger" {
+  zone_id = data.aws_route53_zone.kubox_public.zone_id
+  name    = "jaeger.kubox.shop"
+  type    = "A"
+  allow_overwrite = true
   
-#   values = [
-#     yamlencode({
-#       loki = {
-#         enabled = true
-#         resources = {
-#           requests = { cpu = "50m", memory = "128Mi" }
-#           limits = { cpu = "200m", memory = "256Mi" }
-#         }
-#       }
-#       promtail = {
-#         enabled = true
-#         resources = {
-#           requests = { cpu = "10m", memory = "64Mi" }
-#           limits = { cpu = "50m", memory = "128Mi" }
-#         }
-#       }
-#       fluent-bit = { enabled = false }
-#       grafana = { enabled = false }  # 위에서 이미 설치
-#       prometheus = { enabled = false }  # 위에서 이미 설치
-#     })
-#   ]
+  alias {
+    name                   = data.kubernetes_service.istio_gateway.status[0].load_balancer[0].ingress[0].hostname
+    zone_id                = data.aws_lb.istio_nlb.zone_id
+    evaluate_target_health = false
+  }
 
-#   depends_on = [kubernetes_namespace.monitoring]
-# }
+  depends_on = [data.kubernetes_service.istio_gateway]
+}
 
-# # Jaeger (분산 추적 - 나중에 필요시 활성화)
-# resource "helm_release" "jaeger" {
-#   name             = "jaeger"
-#   repository       = "https://jaegertracing.github.io/helm-charts"
-#   chart            = "jaeger"
-#   namespace        = "monitoring"
+# Prometheus Route53 레코드
+resource "aws_route53_record" "prometheus" {
+  zone_id = data.aws_route53_zone.kubox_public.zone_id
+  name    = "prometheus.kubox.shop"
+  type    = "A"
+  allow_overwrite = true
+  
+  alias {
+    name                   = data.kubernetes_service.istio_gateway.status[0].load_balancer[0].ingress[0].hostname
+    zone_id                = data.aws_lb.istio_nlb.zone_id
+    evaluate_target_health = false
+  }
 
-#   values = [
-#     yamlencode({
-#       allInOne = {
-#         enabled = true
-#         resources = {
-#           requests = { cpu = "50m", memory = "128Mi" }
-#           limits = { cpu = "200m", memory = "256Mi" }
-#         }
-#       }
-#       agent = { enabled = false }
-#       collector = { enabled = false }
-#       query = { enabled = false }
-#     })
-#   ]
+  depends_on = [data.kubernetes_service.istio_gateway]
+}
 
-#   depends_on = [helm_release.istiod]
-# }
+# Kiali Route53 레코드
+resource "aws_route53_record" "kiali" {
+  zone_id = data.aws_route53_zone.kubox_public.zone_id
+  name    = "kiali.kubox.shop"
+  type    = "A"
+  allow_overwrite = true
+  
+  alias {
+    name                   = data.kubernetes_service.istio_gateway.status[0].load_balancer[0].ingress[0].hostname
+    zone_id                = data.aws_lb.istio_nlb.zone_id
+    evaluate_target_health = false
+  }
+
+  depends_on = [data.kubernetes_service.istio_gateway]
+}
