@@ -83,8 +83,8 @@ resource "helm_release" "sonarqube" {
           cpu    = "50m"
         }
         limits = {
-          memory = "2Gi"
-          cpu    = "250m"
+          memory = "3Gi"
+          cpu    = "300m"
         }
       }
       
@@ -101,16 +101,28 @@ resource "helm_release" "sonarqube" {
       ]
       
       # 시작 시간 늘리기
-      livenessProbe = {
+      startupProbe = {
+        httpGet = { path = "/api/system/status", port = 9000 }
         initialDelaySeconds = 300
         periodSeconds = 30
         timeoutSeconds = 10
+        failureThreshold = 80
       }
       
       readinessProbe = {
+        httpGet = { path = "/api/system/status", port = 9000 }
         initialDelaySeconds = 120
         periodSeconds = 30
         timeoutSeconds = 10
+        failureThreshold = 12
+      }
+
+      livenessProbe = {
+        httpGet = { path = "/api/system/status", port = 9000 }
+        initialDelaySeconds = 600
+        periodSeconds = 30
+        timeoutSeconds = 10
+        failureThreshold = 6
       }
     })
   ]
